@@ -146,6 +146,9 @@
     ))
 
 
+;;; ---------------------------------------------------------------
+
+
 (defun fee-by-key (key list)
   (let ((pos (position key list :key #'first)))
     (when pos
@@ -165,6 +168,9 @@
             (remove nil result)))))
 
 
+;;; ---------------------------------------------------------------
+
+
 (defun plist1-covers-plist2 (plist1 plist2)
   (loop for (key val) on plist1 by #'cddr
         always (equalp (getf plist2 key) val)))
@@ -179,53 +185,90 @@
   (remove-duplicates list :test #'plist-equalp))
 
 
-(defun point-covered-p (plist list)
-  (let ((copy (copy-list plist)))
-    (remf copy :pont)
-    (find copy list :test #'plist-equalp)))
+;;; ---------------------------------------------------------------
 
 
-(defun remove-points-covered (list)
+(defparameter *rec-comp*
+  `(:tv   (,#'string-equal ,#'string-lessp nil)
+    :par  (,#'= ,#'< nil)
+    :spar (,#'string-equal ,#'string-lessp t)
+    :bek  (,#'= ,#'< nil)
+    :sbek (,#'string-equal ,#'string-lessp t)
+    :mell (,#'= ,#'< t)
+    :pont (,#'string-equal ,#'string-lessp t)))
+
+
+(defun <-records (rec1 rec2 &optional (opts *rec-comp*))
+  (and opts
+       (destructuring-bind (key (same-fn less-fn orientation) &rest rest)
+           opts
+         (declare (ignore rest))
+         (let ((v1 (getf rec1 key))
+               (v2 (getf rec2 key)))
+           (cond ((not (or v1 v2))        (<-records rec1 rec2 (cddr opts)))
+                 ((null v1)               orientation)
+                 ((null v2)               (not orientation))
+                 ((funcall same-fn v1 v2) (<-records rec1 rec2 (cddr opts)))
+                 (t                       (funcall less-fn v1 v2)))))))
+
+
+(defun sort-records (list)
+  (sort list #'<-records))
+
+
+;;; ---------------------------------------------------------------
+
+
+(defun key-order ()
+  (loop for (key value) on *rec-comp* by #'cddr collecting
+        key))
+
+
+(defun remove-branches (plist key)
+  (let* ((keys (key-order))
+         (start (position key keys))
+         (drops (subseq keys start))
+         (copy (copy-list plist)))
+    (dolist (key drops)
+      (remf copy key))
+    (format t "~a  ~a~%" plist copy)
+    copy))
+
+
+(defun point-covered-p (plist list key)
+  (when (find key plist)
+    (let ((pruned (remove-branches plist key)))
+      (find pruned list :test #'plist-equalp))))
+
+
+(defun remove-covered-sub (list key)
   (remove-if #'(lambda (element)
-                 (point-covered-p element list))
+                 (point-covered-p element list key))
              list))
 
 
-(defun <-or-end (val1 val2)
-  (cond ((null val1) nil)
-        ((null val2) t)
-        (t (< val1 val2))))
+(defun remove-covered-subs (list &optional (keys '(:pont)))
+  (if (null keys)
+    list
+    (remove-covered-subs
+     (remove-covered-sub list (first keys))
+     (rest keys))))
 
 
-(defun <-or-start (val1 val2)
-  (cond ((null val1) t)
-        ((null val2) nil)
-        (t (< val1 val2))))
+;;; ---------------------------------------------------------------
 
 
-(defun =-or-nil (val1 val2)
-  (cond ((null val1) nil)
-        ((null val2) nil)
-        (t (= val1 val2))))
-  
-
-(defparameter *rec-comp*
-  `(:tv   (,#'string-equal ,#'string-lessp :bottom)
-    :par  (,#'= ,#'< :bottom)
-    :spar (,#'string-equal ,#'string-lessp :top)
-    :bek  (,#'= ,#'< :bottom)
-    :sbek (,#'string-equal ,#'string-lessp :top)
-    :mell (,#'= ,#'< :top)
-    :pont (,#'string-equal ,#'string-lessp :top)))
+(defun generate-refs (keys)
+  (sort-records
+   (remove-covered-subs
+    (remove-duplicate-plists
+     (collect-fees keys *illetmeny*))
+    '(:spar :sbek :pont))))
 
 
+;;; ---------------------------------------------------------------
 
 
-(defun <-records (rec1 rec2)
-	
-
-  )
-;; rendezéskor a fenti feltételsort kell lejátszani. 3. elem azt mondja hogy ha egy helyen nincs olyan kulcs, akkor hova kerüljön.
 
 
 
