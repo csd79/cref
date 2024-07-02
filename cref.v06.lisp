@@ -231,7 +231,6 @@
          (copy (copy-list plist)))
     (dolist (key drops)
       (remf copy key))
-;    (format t "~a  ~a~%" plist copy)
     copy))
 
 
@@ -372,19 +371,6 @@
     copy))
 
 
-#|(defun traverse (list)
-  (let ((crumbs   '())
-        (results  '())
-        (*output* nil))
-    (dolist (plist list)
-      (loop for (key val) on plist by #'cddr doing
-            (unless (equalp (getf crumbs key) val)
-              (setf crumbs (reset-crumbs crumbs key))
-              (setf (getf crumbs key) val)
-              (push (display plist key) results))))
-    (remove nil (nreverse results))))|#
-
-
 (defun offset (list i)
   (let ((len (length list)))
     (when (<= i (1- len))
@@ -392,17 +378,21 @@
 
 
 (defun traverse (list)
-  (let ((previous '())
-        (current  '())
-        (results  '())
-        (*output* nil))
+  (let ((previous    '())
+        (current     '())
+        (results     '())
+        (*output*    nil)
+        (tested-keys '()))
     (loop for i from 0 below (length list) doing
           (setf current (elt list i))
           (loop for i from 0 below (length current) by 2 doing
                 (let ((key     (offset current i))
                       (val     (offset current (1+ i)))
                       (nextkey (offset current (+ i 2))))
-                  (if (or (not (equalp (getf previous key) val))
+                  (push (equalp (getf previous key) val) tested-keys)
+                  (print tested-keys)
+;                  (if (or (not (position-if #'null tested-keys))         ; de ez nem jó
+                  (if (or (not (equalp (getf previous key) val)) ; ha a jelenlegi vagy bármelyik korábbi kulcs nem egyezik!!!!!
                           (and (eq key :bek)
                                nextkey
                                (eq nextkey :sbek))
@@ -410,7 +400,8 @@
                                nextkey
                                (eq nextkey :spar)))
                     (push (display current key) results))))
-          (setf previous current))
+          (setf previous current)
+          (setf tested-keys '()))
     (remove nil (nreverse results))))
 
 
@@ -509,12 +500,6 @@
                                               (char/= char #\,)))
                                      last :from-end t)))
          (append (butlast copy)
-                 #|    (:eselyteremt-illresz-terulet "Területi alapon járó esélyteremtési illetményrész"
-     (:tv "1puetv" :par 98 :bek 5 :pont "a")
-     (:tv "2puetv-vhr" :par 88 :bek 3)
-     (:tv "2puetv-vhr" :par 88 :bek 4)
-     (:tv "2puetv-vhr" :par 88 :bek 6)
-     (:tv "2puetv-vhr" :par 131 :bek 4))|#
                  (list (subseq last 0 (1- end))))))
    ;; Két egymás utáni § esetén az elsõ után legyen ","
    #'(lambda (list)
@@ -528,13 +513,8 @@
                          (replace-substring current "§ " "§, ")))))
          copy))
    ))
-         
 
 
-
-
-                   
-                   
 (defun rewrite (list &optional (rewrites *rewrites*))
   (if rewrites
     (rewrite (funcall (first rewrites) list)
@@ -549,8 +529,6 @@
   (rewrite
    (traverse
     (generate-refs keys))))
-
-
 
 
 (defparameter y '(:ig-h :mkkoz-vez))
