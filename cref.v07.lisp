@@ -1,148 +1,154 @@
+(ql:quickload "cl-ppcre")
+
+
+;;; ---------------------------------------------------------------
+
+
 (defparameter *illetmeny*
   '(
     (:havi-ill-gyakornok "Havi illetmény - Gyakornok"
-     (:tv "1puetv" :par 98 :bek 2)
-     (:tv "2puetv-vhr" :par 88 :bek 1))
+     (:tv "1puetv" :par "98" :bek "2")
+     (:tv "2puetv-vhr" :par "88" :bek "1"))
 
     (:havi-ill-ped1-kutato "Havi illetmény - Pedagógus I. - Kutatótanár"
-     (:tv "1puetv" :par 98 :bek 2)
-     (:tv "2puetv-vhr" :par 88 :spar "A" :bek 1))
+     (:tv "1puetv" :par "98" :bek "2")
+     (:tv "2puetv-vhr" :par "88/A" :bek "1"))
 
     (:mesterfok-illnov "Mesterfokozatért járó illetménynövekedés"
-     (:tv "2puetv-vhr" :par 95 :spar "A." :bek 1))
+     (:tv "2puetv-vhr" :par "95/A" :bek "1"))
 
     (:egyes-tantrgy-illnov "Egyes tantárgyak után járó illetménynövekedés"
-     (:tv "1puetv" :par 95 :spar "A" :bek 2)
-     (:tv "1puetv" :par 95 :spar "A" :bek 4))
+     (:tv "1puetv" :par "95/A" :bek "2")
+     (:tv "1puetv" :par "95/A" :bek "4"))
 
     (:eselyteremt-illresz-terulet "Területi alapon járó esélyteremtési illetményrész"
-     (:tv "1puetv" :par 98 :bek 5 :pont "a")
-     (:tv "2puetv-vhr" :par 88 :bek 3)
-     (:tv "2puetv-vhr" :par 88 :bek 4)
-     (:tv "2puetv-vhr" :par 88 :bek 6)
-     (:tv "2puetv-vhr" :par 131 :bek 4))
+     (:tv "1puetv" :par "98" :bek "5" :pont "a")
+     (:tv "2puetv-vhr" :par "88" :bek "3")
+     (:tv "2puetv-vhr" :par "88" :bek "4")
+     (:tv "2puetv-vhr" :par "88" :bek "6")
+     (:tv "2puetv-vhr" :par "131" :bek "4"))
 
     (:eselyteremt-illresz-feladat "Feladatalapon járó esélyteremtési illetményrész"
-     (:tv "1puetv" :par 98 :bek 5 :pont "b")
-     (:tv "2puetv-vhr" :par 88 :bek 4)
-     (:tv "2puetv-vhr" :par 88 :bek 5)
-     (:tv "2puetv-vhr" :par 88 :bek 6)
-     (:tv "2puetv-vhr" :par 131 :bek 4))
+     (:tv "1puetv" :par "98" :bek "5" :pont "b")
+     (:tv "2puetv-vhr" :par "88" :bek "4")
+     (:tv "2puetv-vhr" :par "88" :bek "5")
+     (:tv "2puetv-vhr" :par "88" :bek "6")
+     (:tv "2puetv-vhr" :par "131" :bek "4"))
 
     (:gyogyped-potl "Gyógypedagógiai pótlék"
-     (:tv "1puetv" :par 103 :bek 1)
-     (:tv "1puetv" :mell 3 :pont "B")
-     (:tv "2puetv-vhr" :par 90 :bek 3)
-     (:tv "2puetv-vhr" :par 90 :bek 4 :sbek "a"))
+     (:tv "1puetv" :par "103" :bek "1")
+     (:tv "1puetv" :mell "3" :pont "B")
+     (:tv "2puetv-vhr" :par "90" :bek "3")
+     (:tv "2puetv-vhr" :par "90" :bek "4a"))
 
     (:diabetesz-ellat "Diabétesz ellátási pótlék"
-     (:tv "1puetv" :par 103 :bek 1)
-     (:tv "1puetv" :mell 3 :pont "B")
-     (:tv "2puetv-vhr"  :par 90 :bek 4)
-     (:tv "3koznev-2011-cxc" :par 62 :bek 1 :sbek "b"))
+     (:tv "1puetv" :par "103" :bek "1")
+     (:tv "1puetv" :mell "3" :pont "B")
+     (:tv "2puetv-vhr"  :par "90" :bek "4")
+     (:tv "3koznev-2011-cxc"" :par" 62 :bek "1b"))
 
     (:nemzetisegi-potl "Nemzetiségi pótlék"
-     (:tv "1puetv" :par 103 :bek 1)
-     (:tv "1puetv" :mell 3 :pont "B")
-     (:tv "2puetv-vhr" :par 90 :bek 2)
-     (:tv "2puetv-vhr" :par 90 :bek 4 :sbek "a"))
+     (:tv "1puetv" :par "103" :bek "1")
+     (:tv "1puetv" :mell "3" :pont "B")
+     (:tv "2puetv-vhr" :par "90" :bek "2")
+     (:tv "2puetv-vhr" :par "90" :bek "4a"))
 
     (:aj-thgond-prg "Arany János Tehetséggondozó Program pótléka"
-     (:tv "2puetv-vhr" :par 90 :bek 7)
-     (:tv "4emmi-20-2012-viii31" :par 176 :bek 8))
+     (:tv "2puetv-vhr" :par "90" :bek "7")
+     (:tv "4emmi-20-2012-viii31" :par "176" :bek "8"))
 
     (:ofo-megbiz "Osztályfõnöki megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 3 :pont "b")
-     (:tv "2puetv-vhr" :par 90  :bek 6)
-     (:tv "2puetv-vhr" :par 90  :bek 6 :sbek "a"))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "3" :pont "b")
+     (:tv "2puetv-vhr" :par "90"  :bek "6")
+     (:tv "2puetv-vhr" :par "90"  :bek "6a"))
 
     (:koll-csopvez "Kollégiumi csoportvezetõi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 3 :pont "b")
-     (:tv "2puetv-vhr" :par 90 :bek 6)
-     (:tv "2puetv-vhr" :par 90 :bek 6 :sbek "a"))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "3" :pont "b")
+     (:tv "2puetv-vhr" :par "90" :bek "6")
+     (:tv "2puetv-vhr" :par "90" :bek "6a"))
 
     (:tanszakvez "Tanszakvezetõi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 3 :pont "b")
-     (:tv "2puetv-vhr" :par 90 :bek 6)
-     (:tv "2puetv-vhr" :par 90 :bek 6 :sbek "a"))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "3" :pont "b")
+     (:tv "2puetv-vhr" :par "90" :bek "6")
+     (:tv "2puetv-vhr" :par "90" :bek "6a"))
 
     (:mkkoz-vez "Munkaközösség-vezetõi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 3 :pont "c")
-     (:tv "2puetv-vhr" :par 90 :bek 5)
-     (:tv "2puetv-vhr" :par 90 :bek 6)
-     (:tv "2puetv-vhr" :par 90 :bek 6 :sbek "a"))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "3" :pont "c")
+     (:tv "2puetv-vhr" :par "90" :bek "5")
+     (:tv "2puetv-vhr" :par "90" :bek "6")
+     (:tv "2puetv-vhr" :par "90" :bek "6a"))
 
     (:cimz-ig "Címzetes igazgatói megbízási díj"
-     (:tv "1puetv" :par 73 :bek 12))
+     (:tv "1puetv" :par "73" :bek "12"))
     
     (:cimz-foig "Címzetes fõigazgatói megbízási díj"
-     (:tv "1puetv" :par 73 :bek 12))
+     (:tv "1puetv" :par "73" :bek "12"))
     
     (:ig "Igazgatói megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 2))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "2"))
     
     (:foig "Fõigazgatói megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 2))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "2"))
     
     (:ig-h "Igazgató-helyettesi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 3 :pont "a"))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "3" :pont "a"))
     
     (:foig-h "Fõigazgató-helyettesi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 2 :pont "a"))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "2" :pont "a"))
     
     (:tagint-ig "Tagintézmény-igazgatói megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 4))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "4"))
     
     (:integys-vez "Intézményegység-vezetõi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 4))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "4"))
     
     (:tagint-ig-h "Tagintézményigazgató-helyettesi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 5))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "5"))
     
     (:integys-vez-h "Intézményegységvezetõ-helyettesi megbízási díj"
-     (:tv "1puetv" :par 102 :bek 1)
-     (:tv "1puetv" :par 102 :bek 5))
+     (:tv "1puetv" :par "102" :bek "1")
+     (:tv "1puetv" :par "102" :bek "5"))
   
     (:pednoks-havi-ill-gyakornok "Havi illetmény - Gyakornok"
-     (:tv "1puetv" :par 96 :bek 1)
-     (:tv "1puetv" :par 96 :bek 2 :pont "a")
-     (:tv "1puetv" :par 98 :bek 2)
-     (:tv "2puetv-vhr" :par 88 :bek 1))
+     (:tv "1puetv" :par "96" :bek "1")
+     (:tv "1puetv" :par "96" :bek "2" :pont "a")
+     (:tv "1puetv" :par "98" :bek "2")
+     (:tv "2puetv-vhr" :par "88" :bek "1"))
     
     (:havi-ill-ped1-2 "Havi illetmény - Pedagógus I. - II."
-     (:tv "1puetv" :par 96 :bek 1)
-     (:tv "1puetv" :par 96 :bek 2 :pont "a")
-     (:tv "1puetv" :par 98 :bek 2)
-     (:tv "2puetv-vhr" :par 88 :spar "A" :bek 1))
+     (:tv "1puetv" :par "96" :bek "1")
+     (:tv "1puetv" :par "96" :bek "2" :pont "a")
+     (:tv "1puetv" :par "98" :bek "2")
+     (:tv "2puetv-vhr" :par "88/A" :bek "1"))
     
     (:pednoks-noks-eselyteremt-illresz "Esélyteremtési illetményrész"
-     (:tv "1puetv" :par 99 :bek 2)
-     (:tv "1puetv" :par 98 :bek 5 :pont "a")
-     (:tv "2puetv-vhr" :par 88 :bek 3)
-     (:tv "2puetv-vhr" :par 88 :bek 4)
-     (:tv "2puetv-vhr" :par 88 :bek 6)
-     (:tv "2puetv-vhr" :par 131 :bek 4))
+     (:tv "1puetv" :par "99" :bek "2")
+     (:tv "1puetv" :par "98" :bek "5" :pont "a")
+     (:tv "2puetv-vhr" :par "88" :bek "3")
+     (:tv "2puetv-vhr" :par "88" :bek "4")
+     (:tv "2puetv-vhr" :par "88" :bek "6")
+     (:tv "2puetv-vhr" :par "131" :bek "4"))
     
     (:pednoks-noks-aj-thgond-prg "Arany János Tehetséggondozó Program pótléka"
-     (:tv "2puetv-vhr" :par 90 :bek 7)
-     (:tv "4emmi-20-2012-viii31" :par 176 :bek 8 :megj "A jogszabályi rendelkezések a pedagógusokra vonatkoznak."))
+     (:tv "2puetv-vhr" :par "90" :bek "7")
+     (:tv "4emmi-20-2012-viii31" :par "176" :bek "8" :megj "A jogszabályi rendelkezések a pedagógusokra vonatkoznak."))
   
     (:noks-havi-ill "Havi illetmény"
-     (:tv "1puetv" :par 96 :bek 2 :pont "b")
-     (:tv "1puestv" :par 99 :bek 1)
-     (:tv "2puetv-vhr" :par 88 :bek 7)
-     (:tv "2puetv-vhr" :par 95 :bek 1))
+     (:tv "1puetv" :par "96" :bek "2" :pont "b")
+     (:tv "1puestv" :par "99" :bek "1")
+     (:tv "2puetv-vhr" :par "88" :bek "7")
+     (:tv "2puetv-vhr" :par "95" :bek "1"))
     ))
 
 
@@ -188,13 +194,45 @@
 ;;; ---------------------------------------------------------------
 
 
+(defun decons-parbek (parbek)
+  (destructuring-bind (main sub)
+      (multiple-value-bind (full subs)
+          (cl-ppcre:scan-to-strings "(\\d*)/*(\\D*)" parbek)
+        (declare (ignore full))
+        (coerce subs 'list))
+    (values
+     (read-from-string main)
+     sub)))
+
+
+(defmacro parbek (pb1 pb2 pb1-main pb1-sub pb2-main pb2-sub &body body)
+  `(multiple-value-bind (,pb1-main ,pb1-sub)
+      (decons-parbek ,pb1)
+    (multiple-value-bind (,pb2-main ,pb2-sub)
+        (decons-parbek ,pb2)
+      ,@body)))
+
+
+(defun parbek< (pb1 pb2)
+  (parbek pb1 pb2 pb1m pb1s pb2m pb2s
+      (or (< pb1m pb2m)
+          (and (= pb1m pb2m)
+               (string-lessp pb1s pb2s)))))
+
+
+(defun parbek= (pb1 pb2)
+  (parbek pb1 pb2 pb1m pb1s pb2m pb2s
+    (and (= pb1m pb2m)
+         (string-equal pb1s pb2s))))
+
+
+
+
 (defparameter *rec-comp*
   `(:tv   (,#'string-equal ,#'string-lessp nil)
-    :par  (,#'= ,#'< nil)
-    :spar (,#'string-equal ,#'string-lessp t)
-    :bek  (,#'= ,#'< nil)
-    :sbek (,#'string-equal ,#'string-lessp t)
-    :mell (,#'= ,#'< t)
+    :par  (,#'parbek= ,#'parbek< nil)
+    :bek  (,#'parbek= ,#'parbek< nil)
+    :mell (,#'parbek= ,#'parbek< t)
     :pont (,#'string-equal ,#'string-lessp t)))
 
 
@@ -290,20 +328,16 @@
   `(:tv   ,#'(lambda (plist)
                (format *output* "~a " (rule-desc plist)))
     :par  ,#'(lambda (plist)
-               (destructuring-bind (&key par spar &allow-other-keys)
+               (destructuring-bind (&key par &allow-other-keys)
                    plist
-                 (if spar
-                   (format *output* "~d/~a. § " par spar)
-                   (format *output* "~d. § " par))))
+                 (format *output* "~d. § " par)))
     :bek  ,#'(lambda (plist)  
-               (destructuring-bind (&key bek sbek pont &allow-other-keys)
+               (destructuring-bind (&key bek pont &allow-other-keys)
                    plist
                  (let ((text (if pont
                                "bekezdésének "
                                "bekezdése, ")))
-                   (if sbek
-                     (format *output* "(~d~a) ~a" bek sbek text)
-                     (format *output* "(~d) ~a" bek text)))))
+                   (format *output* "(~d) ~a" bek text))))
     :mell ,#'(lambda (plist)
                (destructuring-bind (&key mell pont &allow-other-keys)
                    plist
@@ -390,9 +424,8 @@
                       (val     (offset current (1+ i)))
                       (nextkey (offset current (+ i 2))))
                   (push (equalp (getf previous key) val) tested-keys)
-                  (print tested-keys)
-;                  (if (or (not (position-if #'null tested-keys))         ; de ez nem jó
-                  (if (or (not (equalp (getf previous key) val)) ; ha a jelenlegi vagy bármelyik korábbi kulcs nem egyezik!!!!!
+;                  (format t "~a  ~a~%" val tested-keys)
+                  (if (or (position-if #'null tested-keys)
                           (and (eq key :bek)
                                nextkey
                                (eq nextkey :sbek))
