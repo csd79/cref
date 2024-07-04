@@ -6,133 +6,152 @@
 
 (defparameter *illetmeny*
   '(
-    (:havi-ill-gyakornok "Havi illetmény - Gyakornok"
+    (:havi-ill-gyakornok
+     ((:b2) () () "Havi illetmény - Gyakornok")
      (:tv "1puetv" :par "98" :bek "2")
      (:tv "2puetv-vhr" :par "88" :bek "1"))
 
-    (:havi-ill-ped1-kutato "Havi illetmény - Pedagógus I. - Kutatótanár"
+    (:havi-ill-ped1-kutato
+     ((:b2) () () "Havi illetmény - Pedagógus I. - Kutatótanár")
      (:tv "1puetv" :par "98" :bek "2")
      (:tv "2puetv-vhr" :par "88/A" :bek "1"))
 
-    (:mesterfok-illnov "Mesterfokozatért járó illetménynövekedés"
+    (:mesterfok-illnov
+     ((:b2 :b8) () () "Mesterfokozatért járó illetménynövekedés")
      (:tv "2puetv-vhr" :par "95/A" :bek "1"))
 
-    (:egyes-tantrgy-illnov "Egyes tantárgyak után járó illetménynövekedés"
+    (:egyes-tantrgy-illnov
+     ((:b2) () () "Egyes tantárgyak után járó illetménynövekedés")
      (:tv "1puetv" :par "95/A" :bek "2")
      (:tv "1puetv" :par "95/A" :bek "4"))
 
-    (:eselyteremt-illresz-terulet "Területi alapon járó esélyteremtési illetményrész"
+    (:eselyteremt-illr-terulet
+     ((:b2) () () "Területi alapon járó esélyteremtési illetményrész")
      (:tv "1puetv" :par "98" :bek "5" :pont "a")
      (:tv "2puetv-vhr" :par "88" :bek "3")
      (:tv "2puetv-vhr" :par "88" :bek "4")
      (:tv "2puetv-vhr" :par "88" :bek "6")
      (:tv "2puetv-vhr" :par "131" :bek "4"))
 
-    (:eselyteremt-illresz-feladat "Feladatalapon járó esélyteremtési illetményrész"
+    (:eselyteremt-illr-feladat
+     ((:b2) () () "Feladatalapon járó esélyteremtési illetményrész")
      (:tv "1puetv" :par "98" :bek "5" :pont "b")
      (:tv "2puetv-vhr" :par "88" :bek "4")
      (:tv "2puetv-vhr" :par "88" :bek "5")
      (:tv "2puetv-vhr" :par "88" :bek "6")
      (:tv "2puetv-vhr" :par "131" :bek "4"))
 
-    (:gyogyped-potl "Gyógypedagógiai pótlék"
+    (:gyogyped-potl
+     ((:b2 :b8 :b9) () () "Gyógypedagógiai pótlék")
      (:tv "1puetv" :par "103" :bek "1")
      (:tv "1puetv" :mell "3" :pont "B")
      (:tv "2puetv-vhr" :par "90" :bek "3")
      (:tv "2puetv-vhr" :par "90" :bek "4a"))
 
-    (:diabetesz-ellat "Diabétesz ellátási pótlék"
+    (:diabetesz-ellat
+     ((:b2 :b8 :b9) () () "Diabétesz ellátási pótlék")
      (:tv "1puetv" :par "103" :bek "1")
      (:tv "1puetv" :mell "3" :pont "B")
      (:tv "2puetv-vhr"  :par "90" :bek "4")
      (:tv "3koznev-2011-cxc"" :par" 62 :bek "1b"))
 
-    (:nemzetisegi-potl "Nemzetiségi pótlék"
+    (:nemzetisegi-potl
+     ((:b2) () () "Nemzetiségi pótlék")
      (:tv "1puetv" :par "103" :bek "1")
      (:tv "1puetv" :mell "3" :pont "B")
      (:tv "2puetv-vhr" :par "90" :bek "2")
      (:tv "2puetv-vhr" :par "90" :bek "4a"))
 
-    (:aj-thgond-prg "Arany János Tehetséggondozó Program pótléka"
+    (:aj-thgond-prg
+     ((:b2) () () "Arany János Tehetséggondozó Program pótléka")
      (:tv "2puetv-vhr" :par "90" :bek "7")
      (:tv "4emmi-20-2012-viii31" :par "176" :bek "8"))
 
-    (:ofo-megbiz "Osztályfõnöki megbízási díj"
+    (:ofo-megbiz
+     ((:b2) () () "Osztályfõnöki megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "3" :pont "b")
      (:tv "2puetv-vhr" :par "90"  :bek "6")
      (:tv "2puetv-vhr" :par "90"  :bek "6a"))
 
-    (:koll-csopvez "Kollégiumi csoportvezetõi megbízási díj"
+    (:koll-csopvez
+     ((:b2) () () "Kollégiumi csoportvezetõi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "3" :pont "b")
      (:tv "2puetv-vhr" :par "90" :bek "6")
      (:tv "2puetv-vhr" :par "90" :bek "6a"))
 
-    (:tanszakvez "Tanszakvezetõi megbízási díj"
+    (:tanszakvez
+     ((:b2) () () "Tanszakvezetõi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "3" :pont "b")
      (:tv "2puetv-vhr" :par "90" :bek "6")
      (:tv "2puetv-vhr" :par "90" :bek "6a"))
 
-    (:mkkoz-vez "Munkaközösség-vezetõi megbízási díj"
+    (:mkkoz-vez
+     ((:b2) () () "Munkaközösség-vezetõi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "3" :pont "c")
      (:tv "2puetv-vhr" :par "90" :bek "5")
      (:tv "2puetv-vhr" :par "90" :bek "6")
      (:tv "2puetv-vhr" :par "90" :bek "6a"))
 
-    (:cimz-ig "Címzetes igazgatói megbízási díj"
-     (:tv "1puetv" :par "73" :bek "12"))
-    
-    (:cimz-foig "Címzetes fõigazgatói megbízási díj"
-     (:tv "1puetv" :par "73" :bek "12"))
-    
-    (:ig "Igazgatói megbízási díj"
+    (:ig
+     ((:b2) () () "Igazgatói megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "2"))
     
-    (:foig "Fõigazgatói megbízási díj"
+    (:foig
+     ((:b2) () () "Fõigazgatói megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "2"))
     
-    (:ig-h "Igazgató-helyettesi megbízási díj"
+    (:ig-h
+     ((:b2) () () "Igazgató-helyettesi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "3" :pont "a"))
     
-    (:foig-h "Fõigazgató-helyettesi megbízási díj"
+    (:foig-h
+     ((:b2) () () "Fõigazgató-helyettesi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "2" :pont "a"))
     
-    (:tagint-ig "Tagintézmény-igazgatói megbízási díj"
+    (:tagint-ig
+     ((:b2) () () "Tagintézmény-igazgatói megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "4"))
     
-    (:integys-vez "Intézményegység-vezetõi megbízási díj"
+    (:integys-vez
+     ((:b2) () () "Intézményegység-vezetõi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "4"))
     
-    (:tagint-ig-h "Tagintézményigazgató-helyettesi megbízási díj"
+    (:tagint-ig-h
+     ((:b2) () () "Tagintézményigazgató-helyettesi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "5"))
     
-    (:integys-vez-h "Intézményegységvezetõ-helyettesi megbízási díj"
+    (:integys-vez-h
+     ((:b2) () () "Intézményegységvezetõ-helyettesi megbízási díj")
      (:tv "1puetv" :par "102" :bek "1")
      (:tv "1puetv" :par "102" :bek "5"))
   
-    (:pednoks-havi-ill-gyakornok "Havi illetmény - Gyakornok"
+    (:pnoks-havi-ill-gyakornok
+     ((:b8) () () "Havi illetmény - Gyakornok")
      (:tv "1puetv" :par "96" :bek "1")
      (:tv "1puetv" :par "96" :bek "2" :pont "a")
      (:tv "1puetv" :par "98" :bek "2")
      (:tv "2puetv-vhr" :par "88" :bek "1"))
     
-    (:havi-ill-ped1-2 "Havi illetmény - Pedagógus I. - II."
+    (:havi-ill-ped1-2
+     ((:b8) () () "Havi illetmény - Pedagógus I. - II.")
      (:tv "1puetv" :par "96" :bek "1")
      (:tv "1puetv" :par "96" :bek "2" :pont "a")
      (:tv "1puetv" :par "98" :bek "2")
      (:tv "2puetv-vhr" :par "88/A" :bek "1"))
     
-    (:pednoks-noks-eselyteremt-illresz "Esélyteremtési illetményrész"
+    (:pnoks-noks-eselyt-illr
+     ((:b8 :b9) () () "Esélyteremtési illetményrész")
      (:tv "1puetv" :par "99" :bek "2")
      (:tv "1puetv" :par "98" :bek "5" :pont "a")
      (:tv "2puetv-vhr" :par "88" :bek "3")
@@ -140,16 +159,62 @@
      (:tv "2puetv-vhr" :par "88" :bek "6")
      (:tv "2puetv-vhr" :par "131" :bek "4"))
     
-    (:pednoks-noks-aj-thgond-prg "Arany János Tehetséggondozó Program pótléka"
+    (:pnoks-noks-aj-thgond-prg
+     ((:b8 :b9) () () "Arany János Tehetséggondozó Program pótléka")
      (:tv "2puetv-vhr" :par "90" :bek "7")
      (:tv "4emmi-20-2012-viii31" :par "176" :bek "8" :megj "A jogszabályi rendelkezések a pedagógusokra vonatkoznak."))
   
-    (:noks-havi-ill "Havi illetmény"
+    (:noks-havi-ill
+     ((:b9) () () "Havi illetmény")
      (:tv "1puetv" :par "96" :bek "2" :pont "b")
      (:tv "1puestv" :par "99" :bek "1")
      (:tv "2puetv-vhr" :par "88" :bek "7")
      (:tv "2puetv-vhr" :par "95" :bek "1"))
     ))
+
+
+(defparameter *illetmeny-map*
+  '(
+    (:havi-ill-gyakornok       (:b2)         (1)       ("1P00") ())
+    (:havi-ill-ped1-kutato     (:b2)         (2 3 4 5) ("1P00") ())
+    (:mesterfok-illnov         (:b2 :b8)     ()        ("1116") ())
+    (:egyes-tantrgy-illnov     (:b2)         ()        ("1114") ())
+    (:eselyteremt-illr-terulet (:b2)         ()        ("1115") (1))
+    (:eselyteremt-illr-feladat (:b2)         ()        ("1115") (2))
+    (:gyogyped-potl            (:b2 :b8 :b9) ()        ("2587") ())
+    (:diabetesz-ellat          (:b2 :b8 :b9) ()        ("2598") ())
+    (:nemzetisegi-potl         (:b2)         ()        ("2800") ())
+    (:aj-thgond-prg            (:b2)         ()        ("2586") ())
+    (:ofo-megbiz               (:b2)         ()        ("2034") ())
+    (:koll-csopvez             (:b2)         ()        ("2035") ())
+    (:tanszakvez               (:b2)         ()        ("2036") ())
+    (:mkkoz-vez                (:b2)         ()        ("2037") ())
+    (:ig                       (:b2)         ()        ("2028") ())
+    (:foig                     (:b2)         ()        ("2026") ())
+    (:ig-h                     (:b2)         ()        ("2029") ())
+    (:foig-h                   (:b2)         ()        ("2027") ())
+    (:tagint-ig                (:b2)         ()        ("2030") ())
+    (:integys-vez              (:b2)         ()        ("2031") ())
+    (:tagint-ig-h              (:b2)         ()        ("2032") ())
+    (:integys-vez-h            (:b2)         ()        ("2033") ())
+    (:pnoks-havi-ill-gyakornok (:b8)         ()        ("1P00") ())
+    (:havi-ill-ped1-2          (:b8)         ()        ("1P00") ())
+    (:pnoks-noks-eselyt-illr   (:b8 :b9)     ()        ("1115") ())
+    (:pnoks-noks-aj-thgond-prg (:b8 :b9)     ()        ("2586") ())
+    (:noks-havi-ill            (:b9)         ()        ("1P00") ())
+    ))
+
+
+(defparameter *groups*
+  '((01 "Gyakornok")
+    (02 "Pedagógus I.")
+    (03 "Pedagógus II.")
+    (04 "Mesterpedagógus")
+    (05 "Kutatótanár")))
+
+(defparameter *pluses*
+  '((2 "Kedvezményezett vagy felzárkózó településen történõ feladatellátás")
+    (1 "IPR-program keretébe tartozó feladatellátás")))
 
 
 ;;; ---------------------------------------------------------------
@@ -174,24 +239,38 @@
             (remove nil result)))))
 
 
+(defun filter-fees (&key (role nil) (group nil) (code nil) (plus nil))
+  (let ((results '()))
+    (dolist (fee *illetmeny-map*)
+      (destructuring-bind (key roles groups codes pluses)
+          fee
+        (when
+            (and
+             (or (null roles)  (member role  roles))
+             (or (null groups) (member group groups))
+             (or (null codes)  (member code  codes :test #'equalp))
+             (or (null pluses) (member plus  pluses)))
+          (push key results))))
+    (nreverse results)))
+
+
+(defun fees (&key (role nil) (group nil) (codes '()) (plus nil))
+  (apply #'append
+         (mapcar #'(lambda (code)
+                     (filter-fees :role role :group group
+                                  :code code :plus plus))
+                 codes)))
+
+
 ;;; ---------------------------------------------------------------
-
-
-(defun plist1-covers-plist2 (plist1 plist2)
-  (loop for (key val) on plist1 by #'cddr
-        always (equalp (getf plist2 key) val)))
 
 
 (defun plist-equalp (plist1 plist2)
-  (and (plist1-covers-plist2 plist1 plist2)
-       (plist1-covers-plist2 plist2 plist1)))
-
-
-(defun remove-duplicate-plists (list)
-  (remove-duplicates list :test #'plist-equalp))
-
-
-;;; ---------------------------------------------------------------
+  (flet ((p1-covers-p2-p (p1 p2)
+           (loop for (key val) on p1 by #'cddr
+                 always (equalp (getf p2 key) val))))
+    (and (p1-covers-p2-p plist1 plist2)
+         (p1-covers-p2-p plist2 plist1))))
 
 
 (defun decons-parbek (parbek)
@@ -226,8 +305,6 @@
          (string-equal pb1s pb2s))))
 
 
-
-
 (defparameter *rec-comp*
   `(:tv   (,#'string-equal ,#'string-lessp nil)
     :par  (,#'parbek= ,#'parbek< nil)
@@ -248,10 +325,6 @@
                  ((null v2)               (not orientation))
                  ((funcall same-fn v1 v2) (<-records rec1 rec2 (cddr opts)))
                  (t                       (funcall less-fn v1 v2)))))))
-
-
-(defun sort-records (list)
-  (sort list #'<-records))
 
 
 ;;; ---------------------------------------------------------------
@@ -292,16 +365,14 @@
      (rest keys))))
 
 
-;;; ---------------------------------------------------------------
-
-
 (defun generate-refs (keys)
-  (sort-records
-   (remove-covered-subs
-    (remove-duplicate-plists
-     (collect-fees keys *illetmeny*))
-;    '(:spar :sbek :pont))))
-    '(:pont))))
+  (sort
+   (remove-covered-subs 
+    (remove-duplicates 
+     (collect-fees keys *illetmeny*)
+     :test #'plist-equalp)
+    '(:pont))
+   #'<-records))
 
 
 ;;; ---------------------------------------------------------------
@@ -408,7 +479,7 @@
 (defun offset (list i)
   (let ((len (length list)))
     (when (<= i (1- len))
-      (elt list i))))
+      (nth i list))))
 
 
 (defun traverse (list)
@@ -418,7 +489,7 @@
         (*output*    nil)
         (tested-keys '()))
     (loop for i from 0 below (length list) doing
-          (setf current (elt list i))
+          (setf current (nth i list))
           (loop for i from 0 below (length current) by 2 doing
                 (let ((key     (offset current i))
                       (val     (offset current (1+ i)))
@@ -453,23 +524,11 @@
 (defun count-conseq (list pos sub)
   (let ((count 0))
     (loop for i from pos below (length list) doing
-          (let ((current (elt list i)))
+          (let ((current (nth i list)))
             (if (contains-p current (list sub))
               (incf count)
               (loop-finish))))
     count))
-
-
-(defun string-replace (string old new)
-  (let* ((old-start (search old string :test #'string=))
-         (s1-end    (or (position-if-not #'(lambda (char) (char/= char #\Space)) string :from-end t :end old-start)
-                        0))
-         (s2-end    (when s1-end
-                      (+ s1-end (length old)))))
-    (concatenate 'string
-                 (subseq string 0 s1-end)
-                 new
-                 (subseq string (1+ s2-end)))))
 
 
 (defun replace-substring (string old new &optional (start 0))
@@ -494,7 +553,7 @@
               (count  total)
               (copy   (copy-list list)))
          (loop for i from 0 below (length list) doing
-               (let ((string (elt list i)))
+               (let ((string (nth i list)))
                  (when (contains-p string subs)
                    (let* ((pro  (if (find (elt string 0) wovels)
                                   "az" "a"))
@@ -503,7 +562,7 @@
                                                  (= count 1))
                                           "valamint ~a ~a" "~a ~a")
                                         pro string)))
-                     (setf (elt copy i) full))
+                     (setf (nth i copy) full))
                    (decf count))))
          copy))
    ;; Bekezdések, pontok összevonása
@@ -512,17 +571,17 @@
              (copy (copy-list list))
              (len  (length list)))
          (loop for i from 0 below len doing
-               (let* ((string (elt list i))
+               (let* ((string (nth i list))
                       (corres (contains-p string subs)))
                  (when corres
-                   (let* ((found  (elt subs corres))
+                   (let* ((found  (nth corres subs))
                           (conseq (count-conseq list (1+ i) found))
                           (new    (cond ((> conseq 1)
-                                         (string-replace string found ""))
+                                         (replace-substring string found ""))
                                         ((= conseq 1)
-                                         (string-replace string (concatenate 'string found ",") " és"))
+                                         (replace-substring string (concatenate 'string found ",") " és"))
                                         (t string))))
-                     (setf (elt copy i) new)))))
+                     (setf (nth i copy) new)))))
          copy))
    ;; Záró vesszõ törlése
    #'(lambda (list)
@@ -538,14 +597,28 @@
    #'(lambda (list)
        (let ((copy (copy-list list)))
          (loop for i from 0 below (length list) doing
-               (let ((current (elt list i))
+               (let ((current (nth i list))
                      (next    (offset list (1+ i))))
                  (when (and (find #\§ current)
                             (find #\§ next))
-                   (setf (elt copy i)
+                   (setf (nth i copy)
                          (replace-substring current "§ " "§, ")))))
          copy))
+   ;; Dupla szóközök cseréje szimpl szóközre.
+   #'(lambda (list)
+       (let ((copy (copy-list list)))
+         (loop for i from 0 below (length list) doing
+               (let ((current (nth i list)))
+                 (when (search "  " current)
+                   (setf (nth i copy)
+                         (replace-substring current "  " " ")))))
+         copy))
    ))
+#|
+Szükség vana  COPY-LIST-ekre???
+A LOOP... utáni LET-et be lehetne építeni a LOOP-ba.
+A fentiek részei lehetnének egy keretmakrónak.
+ |#
 
 
 (defun rewrite (list &optional (rewrites *rewrites*))
