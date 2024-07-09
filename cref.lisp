@@ -1,4 +1,4 @@
-(ql:quickload "cl-ppcre")
+(in-package :cref)
 
 
 ;;; ---------------------------------------------------------------
@@ -203,6 +203,12 @@
     (:pnoks-noks-aj-thgond-prg (:b8 :b9)     ()        ("2586") ())
     (:noks-havi-ill            (:b9)         ()        ("1P00") ())
     ))
+
+
+(defparameter *roles*
+  '((:b2 "B2")
+    (:b8 "B8")
+    (:b9 "B9")))
 
 
 (defparameter *groups*
@@ -604,7 +610,7 @@
                    (setf (nth i copy)
                          (replace-substring current "§ " "§, ")))))
          copy))
-   ;; Dupla szóközök cseréje szimpl szóközre.
+   ;; Dupla szóközök cseréje szimpla szóközre.
    #'(lambda (list)
        (let ((copy (copy-list list)))
          (loop for i from 0 below (length list) doing
@@ -615,7 +621,7 @@
          copy))
    ))
 #|
-Szükség vana  COPY-LIST-ekre???
+Szükség van a COPY-LIST-ekre???
 A LOOP... utáni LET-et be lehetne építeni a LOOP-ba.
 A fentiek részei lehetnének egy keretmakrónak.
  |#
@@ -637,6 +643,60 @@ A fentiek részei lehetnének egy keretmakrónak.
     (generate-refs keys))))
 
 
+;;; ---------------------------------------------------------------
+
+#||#
+(defparameter *f* "c:\\Users\\cselovszkid\\Downloads\\2024.06.27. Újabb kinevezések elõkészület\\Lekérdezés\\PedNOKS_2.xlsx")
+#||#
+
+
+(defun find-key (val list)
+  (first
+   (find val list :key #'second :test #'string-equal)))
+
+
+(defun run ()
+  (let ((file (second sys:*line-arguments-list*)))
+    (when file
+      (ccom:cclet* ((excel   (com:create-object :progid "Excel.Application"))
+                    (wbooks  #p(workbooks excel))
+                    (wbook   #m(open wbooks file))
+                    (wsheets #p(worksheets wbook))
+                    (ws1     #p(item wsheets 1))
+                    (ws2     #p(item wsheets 2)))
+        (multiple-value-bind (used left top right bottom)
+            (ccom:used-range ws1)
+          (declare (ignorable used left top right))
+          (let* ((role-raw   #p(value2 (ccom:range ws1 32 2)))
+                 (group-raw  #p(value2 (ccom:range ws1 26 2)))
+                 (codes1-raw #p(value2 (ccom:range ws1 16 2 16 bottom)))
+                 (codes2-raw #p(value2 (ccom:range ws1 20 2 20 bottom)))
+                 (role       (find-key role-raw *roles*))
+                 (group      (find-key group-raw *groups*))
+                 (codes      '()))
+            (loop for i from 0 below (1- bottom) doing
+                  (push (aref codes1-raw i 0) codes)
+                  (push (aref codes2-raw i 0) codes))
+            (format t "Személyi kör: ~a~%Beosztás: ~a~%Bérelemkódok: ~a~%"
+                    role group codes)
+            (setf #p(value2 (ccom:range ws2 60 1)) "Jogszabályi hivatkozás"
+                  #p(value2 (ccom:range ws2 60 2))
+                  (convert
+                   (fees :role role
+                         :group group
+                         :codes codes)))))
+        #m(save wbook)
+        #m(close wbook)))
+    (format t "Fájl: ~a~%~%" file)
+;    (format t "A befejezéshez nyomjon ENTER-t.~%")
+    (read-line )))
+
+
+
+
+
+#|
 (defparameter y '(:ig-h :mkkoz-vez))
 (defparameter s '(:foig :ig-h :integys-vez :tanszakvez :mkkoz-vez))
 (defparameter g '(:foig :ig-h :integys-vez :tanszakvez :mkkoz-vez :nemzetisegi-potl :havi-ill-ped1-2))
+|#
