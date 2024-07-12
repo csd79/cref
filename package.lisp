@@ -5,5 +5,5 @@
 
 
 (defpackage #:cref
-  (:use #:cl)
+  (:use #:cl #:ccom)
   (:export #:run))

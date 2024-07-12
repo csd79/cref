@@ -210,7 +210,7 @@
     (:b8 "B8")
     (:b9 "B9")))
 
-2
+
 (defparameter *groups*
   '((01 "Gyakornok")
     (02 "Pedagógus I.")
@@ -655,8 +655,7 @@ A fentiek részei lehetnének egy keretmakrónak.
 ;;; ---------------------------------------------------------------
 
 #||#
-(defparameter *f* "c:\\Users\\cselovszkid\\Downloads\\2024.06.27. Újabb kinevezések elõkészület\\Lekérdezés\\PedNOKS_2.xlsx")
-;(defparameter *f* "c:\\Users\\cselovszkid\\Downloads\\2024.06.27. Újabb kinevezések elõkészület\\Lekérdezés\\Pedagógus.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1.xlsx")
 #||#
 
 
@@ -664,7 +663,7 @@ A fentiek részei lehetnének egy keretmakrónak.
   (first
    (find val list :key #'second :test #'string-equal)))
 
-
+#|
 (defun run ()
   (let ((file (second sys:*line-arguments-list*)))
     (when file
@@ -674,9 +673,6 @@ A fentiek részei lehetnének egy keretmakrónak.
                     (wsheets #p(worksheets wbook))
                     (ws1     #p(item wsheets 1))
                     (ws2     #p(item wsheets 2)))
-#|        (multiple-value-bind (used left top right bottom)
-            (ccom:used-range ws1)
-          (declare (ignorable used left top right))|#
         (ccom:with-used-edges (ws1 left top right bottom)
           (let* ((role-raw   #p(value2 (ccom:range ws1 32 2)))
                  (group-raw  #p(value2 (ccom:range ws1 26 2)))
@@ -703,15 +699,71 @@ A fentiek részei lehetnének egy keretmakrónak.
         #m(save wbook)
         #m(close wbook)))
     (format t "Fájl: ~a~%~%" file)
-;    (format t "A befejezéshez nyomjon ENTER-t.~%")
-    (read-line )))
-
-
-
-
-
-#|
-(defparameter y '(:ig-h :mkkoz-vez))
-(defparameter s '(:foig :ig-h :integys-vez :tanszakvez :mkkoz-vez))
-(defparameter g '(:foig :ig-h :integys-vez :tanszakvez :mkkoz-vez :nemzetisegi-potl :havi-ill-ped1-2))
+;    (read-line )))
+    ))
 |#
+
+
+(defparameter *comp-titles* '(26 4))
+
+
+(defun extract-list (worksheet col1 col2 starting-row)
+  (loop for row from starting-row
+        for a = #p(value2 (range worksheet col1 row))
+        for b = #p(value2 (range worksheet col2 row))
+        until (null a)
+        collect (list a b)))
+
+
+(defun run ()
+  (let ((file (second sys:*line-arguments-list*)))
+    (when file
+      (ccom:cclet* ((excel   (com:create-object :progid "Excel.Application"))
+                    (wbooks  #p(workbooks excel))
+                    (wbook   #m(open wbooks file))
+                    (wsheets #p(worksheets wbook))
+                    (ws1     #p(item wsheets 1))
+                    (ws2     #p(item wsheets 2))
+                    (ws3     #p(item wsheets 3)))
+        ;; Rearrange list of fees
+        (let* ((col1   (first *comp-titles*))
+               (titles (extract-list ws3 col1 (1+ col1) (second *comp-titles*)))
+               (sums1  (extract-list ws1 16 18 2))
+               (sums2  (extract-list ws1 20 22 2))
+               (sums   (remove-duplicates (append sums1 sums2) :key #'first :test #'equalp)))
+          (loop for (code sum) in sums
+                for title  = (second (find code titles :key #'first :test #'equalp))
+                for column = (title-column ws2 title)
+                doing (setf #p(value2 (range ws2 column 2)) sum)))
+        ;; Adding code reference
+        (ccom:with-used-edges (ws1 left top right bottom)
+          (let* ((role-raw   #p(value2 (ccom:range ws2 (title-column ws2 "SZK") 2)))
+                 (group-raw  #p(value2 (ccom:range ws2 (title-column ws2 "Besorolás") 2)))
+                 ;; These aref not on the second page yet...
+                 (plus-raw   #p(value2 (ccom:range ws1 (title-column ws1 "Esélyteremtési illetményrészre") 2)))
+                 ;; Bérelem Bérelem
+                 (codes1-raw #p(value2 (ccom:range ws1 16 2 16 bottom)))
+                 (codes2-raw #p(value2 (ccom:range ws1 20 2 20 bottom)))
+                 (role       (find-key role-raw *roles*))
+                 (group      (find-key group-raw *groups*))
+                 (codes      '())
+                 (plus       (find-key plus-raw *pluses*)))
+            (loop for i from 0 below (1- bottom) doing
+                  (push (aref codes1-raw i 0) codes)
+                  (push (aref codes2-raw i 0) codes))
+            (format t "Személyi kör: ~a~%Beosztás: ~a~%Bérelemkódok: ~a~%"
+                    role group codes)
+            (setf #p(value2 (ccom:range ws2 (title-column ws2 "Jogszabályi hivatkozás") 2))
+                  (convert 
+                   (fees :role  role
+                         :group group
+                         :codes codes
+                         :plus  plus)))))
+        #m(save wbook)
+        #m(close wbook)))
+    (format t "Fájl: ~a~%~%" file)))
+
+
+(defun test ()
+  (let ((sys:*line-arguments-list* (list nil *f*)))
+    (run)))
