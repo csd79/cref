@@ -663,105 +663,176 @@ A fentiek részei lehetnének egy keretmakrónak.
   (first
    (find val list :key #'second :test #'string-equal)))
 
-#|
-(defun run ()
-  (let ((file (second sys:*line-arguments-list*)))
-    (when file
-      (ccom:cclet* ((excel   (com:create-object :progid "Excel.Application"))
-                    (wbooks  #p(workbooks excel))
-                    (wbook   #m(open wbooks file))
-                    (wsheets #p(worksheets wbook))
-                    (ws1     #p(item wsheets 1))
-                    (ws2     #p(item wsheets 2)))
-        (ccom:with-used-edges (ws1 left top right bottom)
-          (let* ((role-raw   #p(value2 (ccom:range ws1 32 2)))
-                 (group-raw  #p(value2 (ccom:range ws1 26 2)))
-                 (plus-raw   #p(value2 (ccom:range ws1 33 2)))
-                 (codes1-raw #p(value2 (ccom:range ws1 16 2 16 bottom)))
-                 (codes2-raw #p(value2 (ccom:range ws1 20 2 20 bottom)))
-                 (role       (find-key role-raw *roles*))
-                 (group      (find-key group-raw *groups*))
-                 (codes      '())
-                 (plus       (find-key plus-raw *pluses*)))
-            (loop for i from 0 below (1- bottom) doing
-                  (push (aref codes1-raw i 0) codes)
-                  (push (aref codes2-raw i 0) codes))
-            (format t "Személyi kör: ~a~%Beosztás: ~a~%Bérelemkódok: ~a~%"
-                    role group codes)
-            (ccom:with-used-edges (ws2 l2 t2 r2 b2)
-              (setf #p(value2 (ccom:range ws2 (1+ r2) 1)) "Jogszabályi hivatkozás"
-                    #p(value2 (ccom:range ws2 (1+ r2) 2))
-                    (convert
-                     (fees :role  role
-                           :group group
-                           :codes codes
-                           :plus  plus))))))
-        #m(save wbook)
-        #m(close wbook)))
-    (format t "Fájl: ~a~%~%" file)
-;    (read-line )))
-    ))
-|#
-
 
 (defparameter *comp-titles* '(26 4))
+(defparameter *sap-it08* 16)
+(defparameter *sap-it14* 20)
 
 
-(defun extract-list (worksheet col1 col2 starting-row)
-  (loop for row from starting-row
+(defun value-rows (worksheet title value)
+  (let ((column (title-column worksheet title))
+        (start  nil)
+        (end    nil))
+;    (print "Vazz!")
+    (loop for row from 2
+          for val = #p(value2 (range worksheet column row))
+          until end doing
+          (progn
+;            (print val)
+            (and (equalp val value)
+                 (not start)
+                 (setf start row))
+            (and (not (equalp val value))
+                 start
+                 (not end)
+                 (setf end row))))
+;    (format t "start: ~a      end: ~a~%" start end)
+    (values start (1- end))))
+          
+
+
+(defun extract-list (worksheet col1 col2 row-start &optional (row-end nil))
+  (loop for row from row-start
         for a = #p(value2 (range worksheet col1 row))
         for b = #p(value2 (range worksheet col2 row))
-        until (null a)
+        until (if row-end
+                (> row row-end)
+                (null a))
         collect (list a b)))
 
 
+(defun copy-unique-bns (workbook)
+  (cclet* ((wsheets #p(worksheets workbook))
+           (ws-sap  #p(item wsheets 1))
+           (ws-wip  #p(item wsheets 2))
+           (excel   #p(application workbook)))
+    (excellerate (excel)
+      (with-used-edges (ws-sap left top right bottom)
+        (let* ((col-sap   (title-column ws-sap "SZTSZ"))
+               (query-bns (loop for row from 2 upto bottom
+                                for range = (range ws-sap col-sap row)
+                                for value = #p(value2 range)
+                                collecting value
+                                doing (setf #p(value2 range) value)))
+               (bns       (remove-duplicates query-bns :test #'equalp))
+               (col-wip   (title-column ws-wip "SZTSZ")))
+          (loop for bn in bns
+                for row from 2 doing
+                (setf #p(value2 (range ws-wip col-wip row))
+                      (format nil "~d" bn))))))))
+
+
+(defun arrange-fees (workbook)
+  (cclet* ((wsheets #p(worksheets workbook))
+           (ws-sap  #p(item wsheets 1))
+           (ws-wip  #p(item wsheets 2))
+           (ws-help #p(item wsheets 3))
+           (excel   #p(application workbook)))
+    (excellerate (excel)
+      (let* ((col1   (first *comp-titles*))
+             (titles (extract-list ws-help col1 (1+ col1) (second *comp-titles*)));;;;;;;;;;;;;;;;;;;;;;;
+             (col-bn (title-column ws-wip "SZTSZ")))
+        (loop for row from 2
+              for bn = #p(value2 (range ws-wip col-bn row))
+              until (null bn) doing
+              (multiple-value-bind (start end)
+                  (value-rows  ws-sap "SZTSZ" bn)
+;                (format t "collect-fees: bn: ~a  start: ~a   end: ~a~%" bn start end)
+                (let* ((sums1 (extract-list ws-sap *sap-it08* (+ *sap-it08* 2) start end))
+                       (sums2 (extract-list ws-sap *sap-it14* (+ *sap-it14* 2) start end))
+                       (sums  (remove-duplicates
+                               (remove ""
+                                       (append sums1 sums2) :key #'first :test #'equalp
+                                       :key #'first :test #'equalp))))
+;                  (format t "collect-fees: sums: ~a~%" sums)
+                  (setf saver sums)
+                  (loop for (code sum) in sums
+                        for title  = (second (find code titles :key #'first :test #'equalp))
+                        for column = (title-column ws-wip title)
+                        doing (setf #p(value2 (range ws-wip column row)) sum)))))))))
+
+
+(defparameter *copies*
+  '(("SZK" "SZK")
+    ("Bérrendsz. csop név" "Besorolás")
+    ("Esélyteremtési illetményrészre" "Esély_jogsz_alap")))
+
+
+(defun straight-copy-values (workbook)
+  (cclet* ((wsheets #p(worksheets workbook))
+           (ws-sap  #p(item wsheets 1))
+           (ws-wip  #p(item wsheets 2))
+           (excel   #p(application workbook)))
+    (excellerate (excel)
+      (let ((col-wip (title-column ws-wip "SZTSZ")))
+        (loop for row-wip from 2
+              for bn      = #p(value2 (range ws-wip col-wip row-wip))
+              until (null bn)
+              for row-sap = (value-rows ws-sap "SZTSZ" bn) doing
+              (loop for (sap wip) in *copies* doing
+                    (setf #p(value2 (range ws-wip (title-column ws-wip wip) row-wip))
+                          #p(value2 (range ws-sap (title-column ws-sap sap) row-sap)))))))))
+
+
+(defun construct-code-reference (workbook)
+  (cclet* ((wsheets #p(worksheets workbook))
+           (ws-sap  #p(item wsheets 1))
+           (ws-wip  #p(item wsheets 2))
+           (excel   #p(application workbook))
+           (col-wip (title-column ws-wip "SZTSZ")))
+    (excellerate (excel)
+      (loop for row from 2
+            for bn = #p(value2 (range ws-wip col-wip row))
+            until (null bn) doing
+            (let ((role-raw  #p(value2 (range ws-wip (title-column ws-wip "SZK") row)))
+                  (group-raw #p(value2 (range ws-wip (title-column ws-wip "Besorolás") row)))
+                  (plus-raw  #p(value2 (range ws-wip (title-column ws-wip "Esély_jogsz_alap") row))))
+              (multiple-value-bind (start stop)
+                  (value-rows ws-sap "SZTSZ" bn)
+;                (format t "SZTSZ: ~a   start: ~a   stop: ~a~%" bn start stop)
+                (let* ((codes      (loop for row from start upto stop
+                                         collecting #p(value2 (range ws-sap *sap-it08* row))
+                                         collecting #p(value2 (range ws-sap *sap-it14* row))))
+#|                       (codes1-raw #p(value2 (ccom:range ws-sap *sap-it08* start *sap-it08* stop)))
+                       (codes2-raw #p(value2 (ccom:range ws-sap *sap-it14* start *sap-it14* stop)))|#
+                       (role       (find-key role-raw *roles*))
+                       (group      (find-key group-raw *groups*))
+;                       (codes      '())
+                       (plus       (find-key plus-raw *pluses*)))
+#|                  (loop for i from 0 upto (- stop start) doing
+                        (push (aref codes1-raw i 0) codes)
+                        (push (aref codes2-raw i 0) codes))|#
+;                  (format t "  role: ~a   group: ~a   plus: ~a~%  codes: ~a~%~%" role group plus codes)
+                  (let* ((fees (fees :role role :group group :codes codes :plus plus))
+;                         )
+;                    (print fees)))))))))
+                         (text (convert fees))
+                         (col  (title-column ws-wip "Jogszabályi hivatkozás")))
+;                    (print text)))))))))
+                  (setf #p(value2 (ccom:range ws-wip col row))
+                        text)))))))))
+
+
 (defun run ()
   (let ((file (second sys:*line-arguments-list*)))
     (when file
       (ccom:cclet* ((excel   (com:create-object :progid "Excel.Application"))
                     (wbooks  #p(workbooks excel))
-                    (wbook   #m(open wbooks file))
-                    (wsheets #p(worksheets wbook))
-                    (ws1     #p(item wsheets 1))
-                    (ws2     #p(item wsheets 2))
-                    (ws3     #p(item wsheets 3)))
-        ;; Rearrange list of fees
-        (let* ((col1   (first *comp-titles*))
-               (titles (extract-list ws3 col1 (1+ col1) (second *comp-titles*)))
-               (sums1  (extract-list ws1 16 18 2))
-               (sums2  (extract-list ws1 20 22 2))
-               (sums   (remove-duplicates (append sums1 sums2) :key #'first :test #'equalp)))
-          (loop for (code sum) in sums
-                for title  = (second (find code titles :key #'first :test #'equalp))
-                for column = (title-column ws2 title)
-                doing (setf #p(value2 (range ws2 column 2)) sum)))
-        ;; Adding code reference
-        (ccom:with-used-edges (ws1 left top right bottom)
-          (let* ((role-raw   #p(value2 (ccom:range ws2 (title-column ws2 "SZK") 2)))
-                 (group-raw  #p(value2 (ccom:range ws2 (title-column ws2 "Besorolás") 2)))
-                 ;; These aref not on the second page yet...
-                 (plus-raw   #p(value2 (ccom:range ws1 (title-column ws1 "Esélyteremtési illetményrészre") 2)))
-                 ;; Bérelem Bérelem
-                 (codes1-raw #p(value2 (ccom:range ws1 16 2 16 bottom)))
-                 (codes2-raw #p(value2 (ccom:range ws1 20 2 20 bottom)))
-                 (role       (find-key role-raw *roles*))
-                 (group      (find-key group-raw *groups*))
-                 (codes      '())
-                 (plus       (find-key plus-raw *pluses*)))
-            (loop for i from 0 below (1- bottom) doing
-                  (push (aref codes1-raw i 0) codes)
-                  (push (aref codes2-raw i 0) codes))
-            (format t "Személyi kör: ~a~%Beosztás: ~a~%Bérelemkódok: ~a~%"
-                    role group codes)
-            (setf #p(value2 (ccom:range ws2 (title-column ws2 "Jogszabályi hivatkozás") 2))
-                  (convert 
-                   (fees :role  role
-                         :group group
-                         :codes codes
-                         :plus  plus)))))
-        #m(save wbook)
-        #m(close wbook)))
-    (format t "Fájl: ~a~%~%" file)))
+                    (wbook   #m(open wbooks file)))
+        (unwind-protect
+            (progn
+              (print "SZTSZ-ek")
+              (copy-unique-bns wbook)
+              (print "Bérelemek")
+              (arrange-fees wbook)
+              (print "Személyi kör, besorolás")
+              (straight-copy-values wbook)
+              (print "Jogszabályhivatkozás")
+              (construct-code-reference wbook))
+          (progn
+            #m(save wbook)
+            #m(close wbook)))))
+    (format t "~%Fájl mentése: ~a~%KÉSZ~%" file)))
 
 
 (defun test ()
