@@ -22,8 +22,8 @@
 
     (:egyes-tantrgy-illnov
      ((:b2) () () "Egyes tantárgyak után járó illetménynövekedés")
-     (:tv "1puetv" :par "95/A" :bek "2")
-     (:tv "1puetv" :par "95/A" :bek "4"))
+     (:tv "2puetv-vhr" :par "95/A" :bek "2")
+     (:tv "2puetv-vhr" :par "95/A" :bek "4"))
 
     (:eselyteremt-illr-terulet
      ((:b2) () () "Területi alapon járó esélyteremtési illetményrész")
@@ -53,7 +53,7 @@
      (:tv "1puetv" :par "103" :bek "1")
      (:tv "1puetv" :mell "3" :pont "B")
      (:tv "2puetv-vhr"  :par "90" :bek "4")
-     (:tv "3koznev-2011-cxc"" :par" 62 :bek "1b"))
+     (:tv "3koznev-2011-cxc" :par "62" :bek "1b"))
 
     (:nemzetisegi-potl
      ((:b2) () () "Nemzetiségi pótlék")
@@ -210,7 +210,7 @@
     (:b8 "B8")
     (:b9 "B9")))
 
-
+2
 (defparameter *groups*
   '((01 "Gyakornok")
     (02 "Pedagógus I.")
@@ -219,8 +219,8 @@
     (05 "Kutatótanár")))
 
 (defparameter *pluses*
-  '((2 "Kedvezményezett vagy felzárkózó településen történõ feladatellátás")
-    (1 "IPR-program keretébe tartozó feladatellátás")))
+  '((1 "Kedvezményezett vagy felzárkózó településen történõ feladatellátás")
+    (2 "IPR-program keretébe tartozó feladatellátás")))
 
 
 ;;; ---------------------------------------------------------------
@@ -619,6 +619,15 @@
                    (setf (nth i copy)
                          (replace-substring current "  " " ")))))
          copy))
+   ;; " , " cseréje ", "-re
+   #'(lambda (list)
+       (let ((copy (copy-list list)))
+         (loop for i from 0 below (length list) doing
+               (let ((current (nth i list)))
+                 (when (search " , " current)
+                   (setf (nth i copy)
+                         (replace-substring current " , " ", ")))))
+         copy))
    ))
 #|
 Szükség van a COPY-LIST-ekre???
@@ -647,6 +656,7 @@ A fentiek részei lehetnének egy keretmakrónak.
 
 #||#
 (defparameter *f* "c:\\Users\\cselovszkid\\Downloads\\2024.06.27. Újabb kinevezések elõkészület\\Lekérdezés\\PedNOKS_2.xlsx")
+;(defparameter *f* "c:\\Users\\cselovszkid\\Downloads\\2024.06.27. Újabb kinevezések elõkészület\\Lekérdezés\\Pedagógus.xlsx")
 #||#
 
 
@@ -664,27 +674,32 @@ A fentiek részei lehetnének egy keretmakrónak.
                     (wsheets #p(worksheets wbook))
                     (ws1     #p(item wsheets 1))
                     (ws2     #p(item wsheets 2)))
-        (multiple-value-bind (used left top right bottom)
+#|        (multiple-value-bind (used left top right bottom)
             (ccom:used-range ws1)
-          (declare (ignorable used left top right))
+          (declare (ignorable used left top right))|#
+        (ccom:with-used-edges (ws1 left top right bottom)
           (let* ((role-raw   #p(value2 (ccom:range ws1 32 2)))
                  (group-raw  #p(value2 (ccom:range ws1 26 2)))
+                 (plus-raw   #p(value2 (ccom:range ws1 33 2)))
                  (codes1-raw #p(value2 (ccom:range ws1 16 2 16 bottom)))
                  (codes2-raw #p(value2 (ccom:range ws1 20 2 20 bottom)))
                  (role       (find-key role-raw *roles*))
                  (group      (find-key group-raw *groups*))
-                 (codes      '()))
+                 (codes      '())
+                 (plus       (find-key plus-raw *pluses*)))
             (loop for i from 0 below (1- bottom) doing
                   (push (aref codes1-raw i 0) codes)
                   (push (aref codes2-raw i 0) codes))
             (format t "Személyi kör: ~a~%Beosztás: ~a~%Bérelemkódok: ~a~%"
                     role group codes)
-            (setf #p(value2 (ccom:range ws2 60 1)) "Jogszabályi hivatkozás"
-                  #p(value2 (ccom:range ws2 60 2))
-                  (convert
-                   (fees :role role
-                         :group group
-                         :codes codes)))))
+            (ccom:with-used-edges (ws2 l2 t2 r2 b2)
+              (setf #p(value2 (ccom:range ws2 (1+ r2) 1)) "Jogszabályi hivatkozás"
+                    #p(value2 (ccom:range ws2 (1+ r2) 2))
+                    (convert
+                     (fees :role  role
+                           :group group
+                           :codes codes
+                           :plus  plus))))))
         #m(save wbook)
         #m(close wbook)))
     (format t "Fájl: ~a~%~%" file)
