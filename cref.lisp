@@ -501,7 +501,6 @@
                       (val     (offset current (1+ i)))
                       (nextkey (offset current (+ i 2))))
                   (push (equalp (getf previous key) val) tested-keys)
-;                  (format t "~a  ~a~%" val tested-keys)
                   (if (or (position-if #'null tested-keys)
                           (and (eq key :bek)
                                nextkey
@@ -654,31 +653,26 @@ A fentiek részei lehetnének egy keretmakrónak.
 
 ;;; ---------------------------------------------------------------
 
-#||#
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1.xlsx")
-#||#
-
 
 (defun find-key (val list)
   (first
    (find val list :key #'second :test #'string-equal)))
 
 
-(defparameter *comp-titles* '(26 4))
-(defparameter *sap-it08* 16)
-(defparameter *sap-it14* 20)
+;(defparameter *comp-titles* '(26 4))
+;(defparameter *sap-it08* 16)
+;(defparameter *sap-it14* 20)
 
 
 (defun value-rows (worksheet title value)
   (let ((column (title-column worksheet title))
         (start  nil)
         (end    nil))
-;    (print "Vazz!")
     (loop for row from 2
           for val = #p(value2 (range worksheet column row))
           until end doing
           (progn
-;            (print val)
+;            (format t "value-rows: row: ~a~%" row) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             (and (equalp val value)
                  (not start)
                  (setf start row))
@@ -686,19 +680,28 @@ A fentiek részei lehetnének egy keretmakrónak.
                  start
                  (not end)
                  (setf end row))))
-;    (format t "start: ~a      end: ~a~%" start end)
     (values start (1- end))))
-          
 
 
-(defun extract-list (worksheet col1 col2 row-start &optional (row-end nil))
+#|(defun extract-list (worksheet col1 col2 row-start &optional (row-end nil))
   (loop for row from row-start
         for a = #p(value2 (range worksheet col1 row))
         for b = #p(value2 (range worksheet col2 row))
         until (if row-end
                 (> row row-end)
                 (null a))
-        collect (list a b)))
+        collect (list a b)))|#
+
+
+(defun extract-cols (worksheet titles row-start &optional (row-end nil))
+  (loop for row from row-start
+        for list = (mapcar #'(lambda (title)
+                               #p(value2 (range worksheet (title-column worksheet title) row)))
+                           titles)
+        until (if row-end
+                (> row row-end)
+                (null (first list)))
+        collect list))
 
 
 (defun copy-unique-bns (workbook)
@@ -719,17 +722,17 @@ A fentiek részei lehetnének egy keretmakrónak.
           (loop for bn in bns
                 for row from 2 doing
                 (setf #p(value2 (range ws-wip col-wip row))
-                      (format nil "~d" bn))))))))
+                      (format nil "~d" (round bn)))))))))
 
 
-(defun arrange-fees (workbook)
+#|(defun arrange-fees (workbook)
   (cclet* ((wsheets #p(worksheets workbook))
            (ws-sap  #p(item wsheets 1))
            (ws-wip  #p(item wsheets 2))
            (ws-help #p(item wsheets 3))
            (excel   #p(application workbook)))
     (excellerate (excel)
-      (let* ((col1   (first *comp-titles*))
+      (let* ((col1   (first *comp-titles*));;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
              (titles (extract-list ws-help col1 (1+ col1) (second *comp-titles*)));;;;;;;;;;;;;;;;;;;;;;;
              (col-bn (title-column ws-wip "SZTSZ")))
         (loop for row from 2
@@ -737,19 +740,67 @@ A fentiek részei lehetnének egy keretmakrónak.
               until (null bn) doing
               (multiple-value-bind (start end)
                   (value-rows  ws-sap "SZTSZ" bn)
-;                (format t "collect-fees: bn: ~a  start: ~a   end: ~a~%" bn start end)
-                (let* ((sums1 (extract-list ws-sap *sap-it08* (+ *sap-it08* 2) start end))
-                       (sums2 (extract-list ws-sap *sap-it14* (+ *sap-it14* 2) start end))
+                (let* ((sums1 (extract-list ws-sap *sap-it08* (+ *sap-it08* 2) start end));;;;;;;;;;;;;;;;;
+                       (sums2 (extract-list ws-sap *sap-it14* (+ *sap-it14* 2) start end));;;;;;;;;;;;;;;;;
                        (sums  (remove-duplicates
                                (remove ""
                                        (append sums1 sums2) :key #'first :test #'equalp
                                        :key #'first :test #'equalp))))
-;                  (format t "collect-fees: sums: ~a~%" sums)
-                  (setf saver sums)
                   (loop for (code sum) in sums
                         for title  = (second (find code titles :key #'first :test #'equalp))
                         for column = (title-column ws-wip title)
-                        doing (setf #p(value2 (range ws-wip column row)) sum)))))))))
+                        doing (setf #p(value2 (range ws-wip column row)) sum)))))))))|#
+
+
+(defparameter *sap-it08* '(16 18 30))
+(defparameter *sap-it14* '(20 22 31))
+
+(defun collect-fee-data (worksheet row-start row-end)
+  (flet ((collect (list row)
+           (mapcar #'(lambda (col)
+                       #p(value2 (range worksheet col row)))
+                   list)))
+    (loop for row from row-start upto row-end
+          collecting (collect *sap-it08* row)
+          collecting (collect *sap-it14* row))))
+;          doing (format t "collect-fee-data: row: ~a~%" row)))) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defun arrange-fees (workbook)
+  (cclet* ((wsheets      #p(worksheets workbook))
+           (ws-sap       #p(item wsheets 1))
+           (ws-wip       #p(item wsheets 2))
+           (ws-help      #p(item wsheets 3))
+           (excel        #p(application workbook))
+           (destinations (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2))
+           (col-bn       (title-column ws-wip "SZTSZ")))
+    (excellerate (excel)
+      ;; Iterate over BNs on sheet 2
+      (loop for row from 2
+            for bn = #p(value2 (range ws-wip col-bn row))
+            until (null bn) doing
+            ;; Find BN rows on sheet 1
+;            (format t "arrange-fees: bn: ~a~%" bn) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            (multiple-value-bind (start end)
+                (value-rows ws-sap "SZTSZ" bn)
+              ;; Collect all fee data for BN from sheet 1
+              (let ((fees (remove-duplicates
+                           (collect-fee-data ws-sap start end)
+                           :key #'first :test #'equalp)))
+                ;; Iterate over all possible fee elements
+                (dolist (titles destinations)
+                  (destructuring-bind (code name ends)
+                      titles
+;                    (format t "  arrange-fees: code: ~a~%" code) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                    ;; If element found of sheet 1:
+                    (let ((found (find code fees :key #'first :test #'equalp)))
+                      (when found
+                        ;; Copy sum
+                        (setf #p(value2 (range ws-wip (title-column ws-wip name) row))
+                              (second found))
+                        ;; Copy date
+                        (setf #p(value2 (range ws-wip (title-column ws-wip ends) row))
+                              (third found))))))))))))
 
 
 (defparameter *copies*
@@ -789,28 +840,20 @@ A fentiek részei lehetnének egy keretmakrónak.
                   (plus-raw  #p(value2 (range ws-wip (title-column ws-wip "Esély_jogsz_alap") row))))
               (multiple-value-bind (start stop)
                   (value-rows ws-sap "SZTSZ" bn)
-;                (format t "SZTSZ: ~a   start: ~a   stop: ~a~%" bn start stop)
                 (let* ((codes      (loop for row from start upto stop
-                                         collecting #p(value2 (range ws-sap *sap-it08* row))
-                                         collecting #p(value2 (range ws-sap *sap-it14* row))))
-#|                       (codes1-raw #p(value2 (ccom:range ws-sap *sap-it08* start *sap-it08* stop)))
-                       (codes2-raw #p(value2 (ccom:range ws-sap *sap-it14* start *sap-it14* stop)))|#
+                                         collecting #p(value2 (range ws-sap (first *sap-it08*) row))
+                                         collecting #p(value2 (range ws-sap (first *sap-it14*) row))))
                        (role       (find-key role-raw *roles*))
                        (group      (find-key group-raw *groups*))
-;                       (codes      '())
                        (plus       (find-key plus-raw *pluses*)))
-#|                  (loop for i from 0 upto (- stop start) doing
-                        (push (aref codes1-raw i 0) codes)
-                        (push (aref codes2-raw i 0) codes))|#
-;                  (format t "  role: ~a   group: ~a   plus: ~a~%  codes: ~a~%~%" role group plus codes)
                   (let* ((fees (fees :role role :group group :codes codes :plus plus))
-;                         )
-;                    (print fees)))))))))
                          (text (convert fees))
                          (col  (title-column ws-wip "Jogszabályi hivatkozás")))
-;                    (print text)))))))))
-                  (setf #p(value2 (ccom:range ws-wip col row))
-                        text)))))))))
+                    (setf #p(value2 (ccom:range ws-wip col row))
+                          text)))))))))
+
+
+;;; ---------------------------------------------------------------
 
 
 (defun run ()
@@ -823,9 +866,9 @@ A fentiek részei lehetnének egy keretmakrónak.
             (progn
               (print "SZTSZ-ek")
               (copy-unique-bns wbook)
-              (print "Bérelemek")
+              (print "Bérelemek (összeg, érvényesség vége)")
               (arrange-fees wbook)
-              (print "Személyi kör, besorolás")
+              (print "Személyi kör, besorolás, esélyteremtési illetményrész jogalapja")
               (straight-copy-values wbook)
               (print "Jogszabályhivatkozás")
               (construct-code-reference wbook))
@@ -835,6 +878,38 @@ A fentiek részei lehetnének egy keretmakrónak.
     (format t "~%Fájl mentése: ~a~%KÉSZ~%" file)))
 
 
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1több_fõ.xlsx")
+
 (defun test ()
   (let ((sys:*line-arguments-list* (list nil *f*)))
     (run)))
+
+
+(defun test2 ()
+  (cclet* ((wbook   (get-document *f*))
+           (wsheets #p(worksheets wbook))
+           (ws3     #p(item wsheets 3)))
+    (extract-cols ws3 '("IeKód" "IeNév" "IeVége") 2)))
+
+
+(defun test3 ()
+  (cclet* ((wbook   (get-document *f*))
+           (wsheets #p(worksheets wbook))
+           (ws1     #p(item wsheets 1)))
+    (collect-fee-data ws1 2 9)))
+
+
+(defun test4 ()
+  (cclet* ((excel   (com:create-object :progid "Excel.Application"))
+           (wbooks  #p(workbooks excel))
+           (wbook   #m(open wbooks *f*))
+           (wsheets #p(worksheets wbook))
+           (ws1     #p(item wsheets 1)))
+    (print (loop for col from 1 upto 5
+                 collecting (xcell ws1 col 1)))
+    (loop for row from 2 upto 6
+          doing (setf (xcell ws1 1 row) row))
+    (print (locate-row ws1 "Név" "BECSEI NÓRA"))
+    (setf (xcell ws1 2 '("Név" "BECSEI NÓRA")) "Hihihihihihihihihihihihihihi!")
+    #m(save wbook)
+    #m(close wbook)))
