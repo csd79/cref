@@ -223,6 +223,25 @@
     (2 "IPR-program keretébe tartozó feladatellátás")))
 
 
+(defparameter *tv*
+  '(("1puetv"
+     "Púétv."
+     "pedagógusok új életpályájáról szóló 2023. évi LII. törvény (a továbbiakban: Púétv.)")
+    ("2puetv-vhr"
+     "Púétv. vhr."
+     "pedagógusok új életpályájáról szóló 2023. évi LII. törvény végrehajtásáról szóló 401/2023. (VIII. 30.) Korm. rendelet (a továbbiakban: Púétv. vhr.)")
+    ("3koznev-2011-cxc"
+     "???"
+     "nemzeti köznevelésrõl szóló 2011. évi CXC. törvény")
+    ("4emmi-20-2012-viii31"
+     "???"
+     "nevelési-oktatási intézmények mûködésérõl és a köznevelési intézmények névhasználatáról szóló 20/2012. (VIII. 31.) EMMI rendelet"
+     )))
+
+
+(defparameter *fully-defined-tvs* '())
+
+
 ;;; ---------------------------------------------------------------
 
 
@@ -384,18 +403,13 @@
 ;;; ---------------------------------------------------------------
 
 
-(defparameter *tv*
-  '(("1puetv"               "Púétv.")
-    ("2puetv-vhr"           "Púétv. vhr.")
-    ("3koznev-2011-cxc"     "nemzeti köznevelésrõl szóló 2011. évi CXC. törvény")
-    ("4emmi-20-2012-viii31" "nevelési-oktatási intézmények mûködésérõl és a köznevelési intézmények névhasználatáról szóló 20/2012. (VIII. 31.) EMMI rendelet")))
-
-
 (defun rule-desc (plist)
-  (let* ((tv (getf plist :tv))
-         (pair (find tv *tv* :test #'string= :key #'first)))
-    (when pair
-      (second pair))))
+  (let* ((tv     (getf plist :tv))
+         (triple (find tv *tv* :test #'string= :key #'first)))
+    (when triple
+      (if (position tv *fully-defined-tvs* :test #'string=)
+        (second triple)
+        (third  triple)))))
 
 
 (defparameter *output* nil)
@@ -769,6 +783,7 @@ A fentiek részei lehetnének egy keretmakrónak.
           ;; Find BN rows on the SAP sheet
           (multiple-value-bind (start stop)
               (value-rows ws-sap "SZTSZ" bn)
+;            (print (xcell ws-wip "Gyakornoki_idõ" row)) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             ;; Collect fee element codes
             (let* ((codes (loop for row from start upto stop
                                 collecting (xcell ws-sap (first *sap-it08*) row)
@@ -778,10 +793,24 @@ A fentiek részei lehetnének egy keretmakrónak.
                            :role  (find-key (xcell ws-wip "SZK" row) *roles*)
                            :group (find-key (xcell ws-wip "Besorolás" row) *groups*)
                            :plus  (find-key (xcell ws-wip "Esély_jogsz_alap" row) *pluses*)
-                           :codes codes)))
-              ;; Construct text and copy in onto the WIP sheet
+                           :codes codes))
+                   ;; Construct text
+                   (*fully-defined-tvs* (if (string= (xcell ws-wip "Besorolás" row) "Gyakornok")
+                                          '("1puetv" "2puetv-vhr")
+                                          '("1puetv")))
+;                   '("1puetv" "2puetv-vhr" "3koznev-2011-cxc" "4emmi-20-2012-viii31")
+                   (text  (convert fees))
+                   )
+#|                   ;; Correct the test if there's no apprenticeship
+                   (text2 (if (string= (xcell ws-wip "Gyakornoki_idõ" row) "")
+                            (replace-substring text
+                                               "Púétv. vhr."
+                                               "pedagógusok új életpályájáról szóló 2023. évi LII. törvény végrehajtásáról szóló 401/2023. (VIII. 30.) Korm. rendelet (a továbbiakban: Púétv. vhr.)")
+                            text)))|#
+              ;; Copy text to the WIP sheet
               (setf (xcell ws-wip "Jogszabályi hivatkozás" row)
-                    (convert fees)))))))
+;                    text2))))))
+                    text))))))
 
 
 ;;; ---------------------------------------------------------------
@@ -802,7 +831,8 @@ A fentiek részei lehetnének egy keretmakrónak.
       (format t "~%Fájl mentve: ~a~%KÉSZ~%" file))))
 
 
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1több_fõ.xlsx")
+;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1több_fõ.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ__.xlsx")
 
 (defun test ()
   (let ((sys:*line-arguments-list* (list nil *f*)))

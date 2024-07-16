@@ -3,7 +3,7 @@
 (defsystem "cref"
   :description "Code ref generator"
   :author      "Denes Cselovszki <denes.cselovszki@gmail.com>"
-  :version     "0.15"
+  :version     "0.16"
   :depends-on  ("ccom" "cl-ppcre")
   :serial      t
   :components  ((:file "package")
