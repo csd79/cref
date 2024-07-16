@@ -642,9 +642,6 @@ A fentiek részei lehetnének egy keretmakrónak.
     (apply #'concatenate 'string list)))
         
 
-;;; ---------------------------------------------------------------
-
-
 (defun convert (keys)
   (rewrite
    (traverse
@@ -688,48 +685,8 @@ A fentiek részei lehetnének egy keretmakrónak.
         collect list))
 
 
-#|(defun copy-unique-bns (workbook)
-  (cclet* ((wsheets #p(worksheets workbook))
-           (ws-sap  #p(item wsheets 1))
-           (ws-wip  #p(item wsheets 2))
-           (excel   #p(application workbook)))
-    (excellerate (excel)
-      (with-used-edges (ws-sap left top right bottom)
-        (let* ((col-sap   (title-column ws-sap "SZTSZ"))
-               (query-bns (loop for row from 2 upto bottom
-                                for range = (range ws-sap col-sap row)
-                                for value = #p(value2 range)
-                                collecting value
-                                doing (setf #p(value2 range) value)))
-               (bns       (remove-duplicates query-bns :test #'equalp))
-               (col-wip   (title-column ws-wip "SZTSZ")))
-          (loop for bn in bns
-                for row from 2 doing
-                (setf #p(value2 (range ws-wip col-wip row))
-                      (format nil "~d" (round bn)))))))))|#
-
-#|(defun copy-unique-bns (workbook)
-  (cclet* ((wsheets #p(worksheets workbook))
-           (ws-sap  #p(item wsheets 1))
-           (ws-wip  #p(item wsheets 2))
-           (excel   #p(application workbook)))
-    (excellerate (excel)
-      ;; Collect BNs from the SAP sheet
-      (let* ((query-bns (loop for row from 2 upto (last-row ws-sap)
-                              for value = (xcell ws-sap "SZTSZ" row)
-                              collecting value
-                              doing (setf (xcell ws-sap "SZTSZ" row) value)))
-             ;; Keep unique BNs
-             (bns       (remove-duplicates query-bns :test #'equalp)))
-        ;; Copy BNs into the WIP sheet
-        (loop for bn in bns
-              for row from 2 doing
-              (setf (xcell ws-wip "SZTSZ" row)
-                    (format nil "~d" (round bn))))))))|#
-
-
 (defun copy-unique-bns (workbook)
-  (ccom::with-workbook (workbook :wsvars (ws-sap ws-wip))
+  (with-workbook (workbook :wsvars (ws-sap ws-wip))
     ;; Collect BNs from the SAP sheet
     (let* ((query-bns (loop for row from 2 upto (last-row ws-sap)
                             for value = (xcell ws-sap "SZTSZ" row)
@@ -757,72 +714,8 @@ A fentiek részei lehetnének egy keretmakrónak.
           collecting (collect *sap-it14* row))))
 
 
-#|(defun arrange-fees (workbook)
-  (cclet* ((wsheets      #p(worksheets workbook))
-           (ws-sap       #p(item wsheets 1))
-           (ws-wip       #p(item wsheets 2))
-           (ws-help      #p(item wsheets 3))
-           (excel        #p(application workbook))
-           (destinations (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2))
-           (col-bn       (title-column ws-wip "SZTSZ")))
-    (excellerate (excel)
-      ;; Iterate over BNs on sheet 2
-      (loop for row from 2
-            for bn = #p(value2 (range ws-wip col-bn row))
-            until (null bn) doing
-            ;; Find BN rows on sheet 1
-            (multiple-value-bind (start end)
-                (value-rows ws-sap "SZTSZ" bn)
-              ;; Collect all fee data for BN from sheet 1
-              (let ((fees (remove-duplicates
-                           (collect-fee-data ws-sap start end)
-                           :key #'first :test #'equalp)))
-                ;; Iterate over all possible fee elements
-                (dolist (titles destinations)
-                  (destructuring-bind (code name ends)
-                      titles
-                    ;; If element found of sheet 1:
-                    (let ((found (find code fees :key #'first :test #'equalp)))
-                      (when found
-                        ;; Copy sum
-                        (setf #p(value2 (range ws-wip (title-column ws-wip name) row))
-                              (second found))
-                        ;; Copy date
-                        (setf #p(value2 (range ws-wip (title-column ws-wip ends) row))
-                              (third found))))))))))))|#
-
-#|(defun arrange-fees (workbook)
-  (cclet* ((wsheets      #p(worksheets workbook))
-           (ws-sap       #p(item wsheets 1))
-           (ws-wip       #p(item wsheets 2))
-           (ws-help      #p(item wsheets 3))
-           (excel        #p(application workbook))
-           (destinations (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2)))
-    (excellerate (excel)
-      ;; Iterate over BNs on sheet 2
-      (loop for row from 2
-            for bn = (xcell ws-wip "SZTSZ" row)
-            until (null bn) doing
-            ;; Find BN rows on sheet 1
-            (multiple-value-bind (start end)
-                (value-rows ws-sap "SZTSZ" bn)
-              ;; Collect all fee data for BN from sheet 1
-              (let ((fees (remove-duplicates
-                           (collect-fee-data ws-sap start end)
-                           :key #'first :test #'equalp)))
-                ;; Iterate over all possible fee elements
-                (dolist (titles destinations)
-                  (destructuring-bind (code name ends)
-                      titles
-                    ;; If element found of sheet 1:
-                    (let ((found (find code fees :key #'first :test #'equalp)))
-                      (when found
-                        (setf (xcell ws-wip name row) (second found) ; copy sum
-                              (xcell ws-wip ends row) (third found)))))))))))) ; copy date|#
-
-
 (defun arrange-fees (workbook)
-  (ccom::with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
+  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
     (let ((destinations (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2)))
       ;; Iterate over BNs on sheet 2
       (loop for row from 2
@@ -852,41 +745,8 @@ A fentiek részei lehetnének egy keretmakrónak.
     ("Esélyteremtési illetményrészre" "Esély_jogsz_alap")))
 
 
-#|(defun straight-copy-values (workbook)
-  (cclet* ((wsheets #p(worksheets workbook))
-           (ws-sap  #p(item wsheets 1))
-           (ws-wip  #p(item wsheets 2))
-           (excel   #p(application workbook)))
-    (excellerate (excel)
-      (let ((col-wip (title-column ws-wip "SZTSZ")))
-        (loop for row-wip from 2
-              for bn      = #p(value2 (range ws-wip col-wip row-wip))
-              until (null bn)
-              for row-sap = (value-rows ws-sap "SZTSZ" bn) doing
-              (loop for (sap wip) in *copies* doing
-                    (setf #p(value2 (range ws-wip (title-column ws-wip wip) row-wip))
-                          #p(value2 (range ws-sap (title-column ws-sap sap) row-sap)))))))))|#
-
-#|(defun straight-copy-values (workbook)
-  (cclet* ((wsheets #p(worksheets workbook))
-           (ws-sap  #p(item wsheets 1))
-           (ws-wip  #p(item wsheets 2))
-           (excel   #p(application workbook)))
-    (excellerate (excel)
-      ;; Iterate on BNs on the WIP sheet
-      (loop for row-wip from 2
-            for bn = (xcell ws-wip "SZTSZ" row-wip)
-            until (null bn)
-            ;; From the first BN row on the SAP sheet...
-            for row-sap = (value-rows ws-sap "SZTSZ" bn)
-            ;; ...copy values from designated columns onto the WIP sheet
-            doing (loop for (sap wip) in *copies* doing
-                        (setf (xcell ws-wip wip row-wip)
-                              (xcell ws-sap sap row-sap)))))))|#
-
-
 (defun straight-copy-values (workbook)
-  (ccom::with-workbook (workbook :wsvars (ws-sap ws-wip))
+  (with-workbook (workbook :wsvars (ws-sap ws-wip))
     ;; Iterate on BNs on the WIP sheet
     (loop for row-wip from 2
           for bn = (xcell ws-wip "SZTSZ" row-wip)
@@ -899,64 +759,8 @@ A fentiek részei lehetnének egy keretmakrónak.
                             (xcell ws-sap sap row-sap))))))
 
 
-#|(defun construct-code-reference (workbook)
-  (cclet* ((wsheets #p(worksheets workbook))
-           (ws-sap  #p(item wsheets 1))
-           (ws-wip  #p(item wsheets 2))
-           (excel   #p(application workbook))
-           (col-wip (title-column ws-wip "SZTSZ")))
-    (excellerate (excel)
-      (loop for row from 2
-            for bn = #p(value2 (range ws-wip col-wip row))
-            until (null bn) doing
-            (let ((role-raw  #p(value2 (range ws-wip (title-column ws-wip "SZK") row)))
-                  (group-raw #p(value2 (range ws-wip (title-column ws-wip "Besorolás") row)))
-                  (plus-raw  #p(value2 (range ws-wip (title-column ws-wip "Esély_jogsz_alap") row))))
-              (multiple-value-bind (start stop)
-                  (value-rows ws-sap "SZTSZ" bn)
-                (let* ((codes      (loop for row from start upto stop
-                                         collecting #p(value2 (range ws-sap (first *sap-it08*) row))
-                                         collecting #p(value2 (range ws-sap (first *sap-it14*) row))))
-                       (role       (find-key role-raw *roles*))
-                       (group      (find-key group-raw *groups*))
-                       (plus       (find-key plus-raw *pluses*)))
-                  (let* ((fees (fees :role role :group group :codes codes :plus plus))
-                         (text (convert fees))
-                         (col  (title-column ws-wip "Jogszabályi hivatkozás")))
-                    (setf #p(value2 (ccom:range ws-wip col row))
-                          text)))))))))|#
-
-#|(defun construct-code-reference (workbook)
-  (cclet* ((wsheets #p(worksheets workbook))
-           (ws-sap  #p(item wsheets 1))
-           (ws-wip  #p(item wsheets 2))
-           (excel   #p(application workbook)))
-    (excellerate (excel)
-      ;; Iterate on BNs from the WIP sheet
-      (loop for row from 2
-            for bn = (xcell ws-wip "SZTSZ" row)
-            until (null bn)
-            doing
-            ;; Find BN rows on the SAP sheet
-            (multiple-value-bind (start stop)
-                (value-rows ws-sap "SZTSZ" bn)
-              ;; Collect fee element codes
-              (let* ((codes (loop for row from start upto stop
-                                  collecting (xcell ws-sap (first *sap-it08*) row)
-                                  collecting (xcell ws-sap (first *sap-it14*) row)))
-                     ;; Get element records
-                     (fees  (fees
-                             :role  (find-key (xcell ws-wip "SZK" row) *roles*)
-                             :group (find-key (xcell ws-wip "Besorolás" row) *groups*)
-                             :plus  (find-key (xcell ws-wip "Esély_jogsz_alap" row) *pluses*)
-                             :codes codes)))
-                ;; Construct text and copy in onto the WIP sheet
-                (setf (xcell ws-wip "Jogszabályi hivatkozás" row)
-                      (convert fees))))))))|#
-
-
 (defun construct-code-reference (workbook)
-  (ccom::with-workbook (workbook :wsvars (ws-sap ws-wip))
+  (with-workbook (workbook :wsvars (ws-sap ws-wip))
     ;; Iterate on BNs from the WIP sheet
     (loop for row from 2
           for bn = (xcell ws-wip "SZTSZ" row)
@@ -983,31 +787,10 @@ A fentiek részei lehetnének egy keretmakrónak.
 ;;; ---------------------------------------------------------------
 
 
-#|(defun run ()
-  (let ((file (second sys:*line-arguments-list*)))
-    (when file
-      (ccom:cclet* ((excel   (com:create-object :progid "Excel.Application"))
-                    (wbooks  #p(workbooks excel))
-                    (wbook   #m(open wbooks file)))
-        (unwind-protect
-            (progn
-              (print "SZTSZ-ek")
-              (copy-unique-bns wbook)
-              (print "Bérelemek (összeg, érvényesség vége)")
-              (arrange-fees wbook)
-              (print "Személyi kör, besorolás, esélyteremtési illetményrész jogalapja")
-              (straight-copy-values wbook)
-              (print "Jogszabályi hivatkozás")
-              (construct-code-reference wbook))
-          (progn
-            #m(save wbook)
-            #m(close wbook)))))
-    (format t "~%Fájl mentése: ~a~%KÉSZ~%" file)))|#
-
 (defun run ()
   (let ((file (second sys:*line-arguments-list*)))
     (when file
-      (ccom::with-workbook (wbook :open-file file :save t :close t)
+      (with-workbook (wbook :open-file file :save t :close t)
         (print "SZTSZ-ek")
         (copy-unique-bns wbook)
         (print "Bérelemek (összeg, érvényesség vége)")
@@ -1026,42 +809,11 @@ A fentiek részei lehetnének egy keretmakrónak.
     (run)))
 
 
-(defun test2 ()
-  (cclet* ((wbook   (get-document *f*))
-           (wsheets #p(worksheets wbook))
-           (ws3     #p(item wsheets 3)))
-    (extract-cols ws3 '("IeKód" "IeNév" "IeVége") 2)))
-
-
-(defun test3 ()
-  (cclet* ((wbook   (get-document *f*))
-           (wsheets #p(worksheets wbook))
-           (ws1     #p(item wsheets 1)))
-    (collect-fee-data ws1 2 9)))
-
-
-(defun test4 ()
-  (cclet* ((excel   (com:create-object :progid "Excel.Application"))
-           (wbooks  #p(workbooks excel))
-           (wbook   #m(open wbooks *f*))
-           (wsheets #p(worksheets wbook))
-           (ws1     #p(item wsheets 1)))
-    (print (loop for col from 1 upto 5
-                 collecting (xcell ws1 col 1)))
-    (loop for row from 2 upto 6
-          doing (setf (xcell ws1 1 row) row))
-    (print (locate-row ws1 "Név" "BECSEI NÓRA"))
-    (setf (xcell ws1 2 '("Név" "BECSEI NÓRA")) "Hihihihihihihihihihihihihihi!")
-    #m(save wbook)
-    #m(close wbook)))
-
-
 (defun test5 ()
-  (ccom::with-workbook (wbook :open-file *f* :wsvars (ws1) :save t :close t)
+  (with-workbook (wbook :open-file *f* :wsvars (ws1) :save t :close t)
     (print (loop for col from 1 upto 5
                  collecting (xcell ws1 col 1)))
     (loop for row from 2 upto 6
           doing (setf (xcell ws1 1 row) row))
     (print (locate-row ws1 "Név" "BECSEI NÓRA"))
     (setf (xcell ws1 2 '("Név" "BECSEI NÓRA")) "Hihihihihihihihihihihihihihi!")))
-
