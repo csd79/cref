@@ -171,6 +171,7 @@
      (:tv "2puetv-vhr" :par "88" :bek "7")
      (:tv "2puetv-vhr" :par "95" :bek "1"))
     ))
+;; Do I need those embedded '(:bx) () ()' things?
 
 
 (defparameter *illetmeny-map*
@@ -699,6 +700,41 @@ A fentiek részei lehetnének egy keretmakrónak.
         collect list))
 
 
+#|(defun flush-wip-sheet (workbook)
+  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
+    (let* ((last-row     (last-row ws-wip))
+           (fee-elements (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2))
+           (target-columns (append
+                            (list "SZTSZ" "Jogszabályi hivatkozás")
+                            (mapcar #'second fee-elements)
+                            (mapcar #'third  fee-elements)
+                            (mapcar #'second *copies*))))
+      (loop for row from 2 upto last-row doing
+            (dolist (column target-columns)
+;              (format t "Before: ~a,~a: ~a~%" column row (xcell ws-wip column row)) 
+              (setf (xcell ws-wip column row) "")
+;              (format t "After: ~a,~a: ~a~%" column row (xcell ws-wip column row))
+              )))))|#
+
+
+(defun flush-wip-sheet (workbook)
+  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
+    (let* ((fee-elements  (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2))
+           ;; Titles of all the columns we will fill in on the WIP sheet
+           (column-titles (append (list "SZTSZ" "Jogszabályi hivatkozás")
+                                  (mapcar #'second fee-elements)
+                                  (mapcar #'third  fee-elements)
+                                  (mapcar #'second *copies*)))
+           ;; Column numbers
+           (columns       (mapcar #'(lambda (title)
+                                      (title-column ws-wip title))
+                                  column-titles))
+           (last-row      (last-row ws-wip)))
+      ;; Set column ranges to ""
+      (dolist (column columns)
+        (setf #p(value2 (range ws-wip column 2 column last-row)) "")))))
+
+
 (defun copy-unique-bns (workbook)
   (with-workbook (workbook :wsvars (ws-sap ws-wip))
     ;; Collect BNs from the SAP sheet
@@ -746,7 +782,7 @@ A fentiek részei lehetnének egy keretmakrónak.
                 (dolist (titles destinations)
                   (destructuring-bind (code name ends)
                       titles
-                    ;; If element found of sheet 1:
+                    ;; If element found on sheet 1:
                     (let ((found (find code fees :key #'first :test #'equalp)))
                       (when found
                         (setf (xcell ws-wip name row) (second found) ; copy sum
@@ -783,7 +819,6 @@ A fentiek részei lehetnének egy keretmakrónak.
           ;; Find BN rows on the SAP sheet
           (multiple-value-bind (start stop)
               (value-rows ws-sap "SZTSZ" bn)
-;            (print (xcell ws-wip "Gyakornoki_idõ" row)) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             ;; Collect fee element codes
             (let* ((codes (loop for row from start upto stop
                                 collecting (xcell ws-sap (first *sap-it08*) row)
@@ -799,14 +834,7 @@ A fentiek részei lehetnének egy keretmakrónak.
                                           '("1puetv" "2puetv-vhr")
                                           '("1puetv")))
 ;                   '("1puetv" "2puetv-vhr" "3koznev-2011-cxc" "4emmi-20-2012-viii31")
-                   (text  (convert fees))
-                   )
-#|                   ;; Correct the test if there's no apprenticeship
-                   (text2 (if (string= (xcell ws-wip "Gyakornoki_idõ" row) "")
-                            (replace-substring text
-                                               "Púétv. vhr."
-                                               "pedagógusok új életpályájáról szóló 2023. évi LII. törvény végrehajtásáról szóló 401/2023. (VIII. 30.) Korm. rendelet (a továbbiakban: Púétv. vhr.)")
-                            text)))|#
+                   (text  (convert fees)))
               ;; Copy text to the WIP sheet
               (setf (xcell ws-wip "Jogszabályi hivatkozás" row)
 ;                    text2))))))
@@ -820,6 +848,8 @@ A fentiek részei lehetnének egy keretmakrónak.
   (let ((file (second sys:*line-arguments-list*)))
     (when file
       (with-workbook (wbook :open-file file :save t :close t)
+        (print "Korábbi adatok törlése")
+        (flush-wip-sheet wbook)
         (print "SZTSZ-ek")
         (copy-unique-bns wbook)
         (print "Bérelemek (összeg, érvényesség vége)")
@@ -832,7 +862,8 @@ A fentiek részei lehetnének egy keretmakrónak.
 
 
 ;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1több_fõ.xlsx")
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ__.xlsx")
+;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ__.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ_.xlsx")
 
 (defun test ()
   (let ((sys:*line-arguments-list* (list nil *f*)))
@@ -847,3 +878,10 @@ A fentiek részei lehetnének egy keretmakrónak.
           doing (setf (xcell ws1 1 row) row))
     (print (locate-row ws1 "Név" "BECSEI NÓRA"))
     (setf (xcell ws1 2 '("Név" "BECSEI NÓRA")) "Hihihihihihihihihihihihihihi!")))
+
+
+(defun test8 ()
+  (with-workbook (wbook :open-file *f* :wsvars (ws1) :close t :save t)
+;    (setf (xrange ws1 2 2 6 6) (make-array '(4 1) :initial-element "666"))
+    (setf (xrange ws1 "SZTSZ" '("Név" "ÁDÁM CSILLA ÁGNES") :f 7) (make-array '(2 2) :initial-element "666"))
+    ))
