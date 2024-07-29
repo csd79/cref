@@ -3,12 +3,14 @@
 (in-package "CL-USER")
 
 (load "c:\\Users\\cselovszkid\\.lispworks")
+;(load "c:\\Users\\csd79\\.lispworks")
 
 (asdf:load-system "cref")
 
 (lw:deliver 'cref:run
-    "c:\\Users\\cselovszkid\\common-lisp\\cref\\cref_v0.17.exe"
-    5
+    "c:\\Users\\cselovszkid\\common-lisp\\cref\\cref_v0.18.exe"
+;    "c:\\Users\\csd79\\common-lisp\\cref\\cref_v0.18.exe"
+    4
 ;    :console :io
     :multiprocessing t
     :console t

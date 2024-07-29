@@ -167,9 +167,14 @@
     (:noks-havi-ill
      ((:b9) () () "Havi illetmény")
      (:tv "1puetv" :par "96" :bek "2" :pont "b")
-     (:tv "1puestv" :par "99" :bek "1")
+     (:tv "1puetv" :par "99" :bek "1")
      (:tv "2puetv-vhr" :par "88" :bek "7")
      (:tv "2puetv-vhr" :par "95" :bek "1"))
+
+    (:mt-munkaber
+     ((:b1) () () "Munkabér")
+     ())
+
     ))
 ;; Do I need those embedded '(:bx) () ()' things?
 
@@ -203,11 +208,13 @@
     (:pnoks-noks-eselyt-illr   (:b8 :b9)     ()        ("1115") ())
     (:pnoks-noks-aj-thgond-prg (:b8 :b9)     ()        ("2586") ())
     (:noks-havi-ill            (:b9)         ()        ("1P00") ())
+    (:mt-munkaber              (:b1)         ()        ("1100") ())
     ))
 
 
 (defparameter *roles*
-  '((:b2 "B2")
+  '((:b1 "B1")
+    (:b2 "B2")
     (:b8 "B8")
     (:b9 "B9")))
 
@@ -248,11 +255,12 @@
 
 (defun fee-by-key (key list)
   (let ((pos (position key list :key #'first)))
-    (when pos
+    (if pos
       (let ((result (nth pos list)))
         (values (cddr result)
                 (first result)
-                (second result))))))
+                (second result)))
+      (error "Nem definiált bérelem: ~a" key))))
 
 
 (defun collect-fees (keys list)
@@ -278,6 +286,11 @@
              (or (null pluses) (member plus  pluses)))
           (push key results))))
     (nreverse results)))
+#|
+    (setf results (nreverse results))
+    (or results
+        (error "Nem definiált bérelem ~a a következõ csoporthoz: ~a, ~a, ~a," code role group plus))))
+|#
 
 
 (defun fees (&key (role nil) (group nil) (codes '()) (plus nil))
@@ -399,7 +412,6 @@
      :test #'plist-equalp)
     '(:pont))
    #'<-records))
-
 
 ;;; ---------------------------------------------------------------
 
@@ -651,10 +663,11 @@ A fentiek részei lehetnének egy keretmakrónak.
 
 
 (defun rewrite (list &optional (rewrites *rewrites*))
-  (if rewrites
-    (rewrite (funcall (first rewrites) list)
-             (rest rewrites))
-    (apply #'concatenate 'string list)))
+  (when list
+    (if rewrites
+        (rewrite (funcall (first rewrites) list)
+                 (rest rewrites))
+      (apply #'concatenate 'string list))))
         
 
 (defun convert (keys)
@@ -748,7 +761,7 @@ A fentiek részei lehetnének egy keretmakrónak.
       (loop for bn in bns
             for row from 2 doing
             (setf (xcell ws-wip "SZTSZ" row)
-                  (format nil "~d" (round bn)))))))
+                  (format nil "~d" (round (excel-value-as-number bn))))))))
 
 
 (defparameter *sap-it08* '(16 18 30))
@@ -835,6 +848,7 @@ A fentiek részei lehetnének egy keretmakrónak.
                                           '("1puetv")))
 ;                   '("1puetv" "2puetv-vhr" "3koznev-2011-cxc" "4emmi-20-2012-viii31")
                    (text  (convert fees)))
+;              (format t "~a~%~a~%~a~%~a~%~%~%" codes fees *fully-defined-tvs* text)
               ;; Copy text to the WIP sheet
               (setf (xcell ws-wip "Jogszabályi hivatkozás" row)
 ;                    text2))))))
@@ -858,12 +872,16 @@ A fentiek részei lehetnének egy keretmakrónak.
         (straight-copy-values wbook)
         (print "Jogszabályi hivatkozás")
         (construct-code-reference wbook))
-      (format t "~%Fájl mentve: ~a~%KÉSZ~%" file))))
+      (format t "~%Fájl mentve: ~a~%KÉSZ~%" file)))
+  (read-line))
 
 
 ;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1több_fõ.xlsx")
 ;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ__.xlsx")
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ_.xlsx")
+
+;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ_.xlsx")
+;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Adatbázis táblázat.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.Adatbázis táblázat______.xlsx")
 
 (defun test ()
   (let ((sys:*line-arguments-list* (list nil *f*)))
@@ -885,3 +903,11 @@ A fentiek részei lehetnének egy keretmakrónak.
 ;    (setf (xrange ws1 2 2 6 6) (make-array '(4 1) :initial-element "666"))
     (setf (xrange ws1 "SZTSZ" '("Név" "ÁDÁM CSILLA ÁGNES") :f 7) (make-array '(2 2) :initial-element "666"))
     ))
+
+
+(defun test9 (value)
+  (assert (or (numberp value)
+              (and (stringp value)
+                   (numberp (read-from-string value))))
+      (value)
+    "Value ~a is not readable as number." value))
