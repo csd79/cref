@@ -8,7 +8,8 @@
   '(
     (:havi-ill-gyakornok
      ((:b2) () () "Havi illetmény - Gyakornok")
-     (:tv "1puetv" :par "98" :bek "2")
+;     (:tv "1puetv" :par "98" :bek "2")
+     (:tv "1puetv" :par "98" :bek "1")
      (:tv "2puetv-vhr" :par "88" :bek "1"))
 
     (:havi-ill-ped1-kutato
@@ -31,7 +32,8 @@
      (:tv "2puetv-vhr" :par "88" :bek "3")
      (:tv "2puetv-vhr" :par "88" :bek "4")
      (:tv "2puetv-vhr" :par "88" :bek "6")
-     (:tv "2puetv-vhr" :par "131" :bek "4"))
+;     (:tv "2puetv-vhr" :par "131" :bek "4")
+     )
 
     (:eselyteremt-illr-feladat
      ((:b2) () () "Feladatalapon járó esélyteremtési illetményrész")
@@ -39,7 +41,8 @@
      (:tv "2puetv-vhr" :par "88" :bek "4")
      (:tv "2puetv-vhr" :par "88" :bek "5")
      (:tv "2puetv-vhr" :par "88" :bek "6")
-     (:tv "2puetv-vhr" :par "131" :bek "4"))
+;     (:tv "2puetv-vhr" :par "131" :bek "4")
+     )
 
     (:gyogyped-potl
      ((:b2 :b8 :b9) () () "Gyógypedagógiai pótlék")
@@ -140,7 +143,8 @@
      ((:b8) () () "Havi illetmény - Gyakornok")
      (:tv "1puetv" :par "96" :bek "1")
      (:tv "1puetv" :par "96" :bek "2" :pont "a")
-     (:tv "1puetv" :par "98" :bek "2")
+;     (:tv "1puetv" :par "98" :bek "2")
+     (:tv "1puetv" :par "98" :bek "1")
      (:tv "2puetv-vhr" :par "88" :bek "1"))
     
     (:havi-ill-ped1-2
@@ -157,7 +161,8 @@
      (:tv "2puetv-vhr" :par "88" :bek "3")
      (:tv "2puetv-vhr" :par "88" :bek "4")
      (:tv "2puetv-vhr" :par "88" :bek "6")
-     (:tv "2puetv-vhr" :par "131" :bek "4"))
+;     (:tv "2puetv-vhr" :par "131" :bek "4")
+     )
     
     (:pnoks-noks-aj-thgond-prg
      ((:b8 :b9) () () "Arany János Tehetséggondozó Program pótléka")
@@ -764,8 +769,8 @@ A fentiek részei lehetnének egy keretmakrónak.
                   (format nil "~d" (round (excel-value-as-number bn))))))))
 
 
-(defparameter *sap-it08* '(16 18 30))
-(defparameter *sap-it14* '(20 22 31))
+(defparameter *sap-it08* '(16 18 30 36))
+(defparameter *sap-it14* '(20 22 31 35))
 
 (defun collect-fee-data (worksheet row-start row-end)
   (flet ((collect (list row)
@@ -779,7 +784,7 @@ A fentiek részei lehetnének egy keretmakrónak.
 
 (defun arrange-fees (workbook)
   (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
-    (let ((destinations (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2)))
+    (let ((destinations (extract-cols ws-help '("IeKód" "IeNév" "IeVége" "IeKezdete") 2)))
       ;; Iterate over BNs on sheet 2
       (loop for row from 2
             for bn = (xcell ws-wip "SZTSZ" row)
@@ -793,13 +798,15 @@ A fentiek részei lehetnének egy keretmakrónak.
                            :key #'first :test #'equalp)))
                 ;; Iterate over all possible fee elements
                 (dolist (titles destinations)
-                  (destructuring-bind (code name ends)
+                  (destructuring-bind (code name ends starts)
                       titles
                     ;; If element found on sheet 1:
                     (let ((found (find code fees :key #'first :test #'equalp)))
                       (when found
-                        (setf (xcell ws-wip name row) (second found) ; copy sum
-                              (xcell ws-wip ends row) (third found)))))))))))) ; copy date
+                        (setf (xcell ws-wip name   row) (second found) ; copy sum
+                              (xcell ws-wip ends   row) (third  found) ; copy end date
+                              (xcell ws-wip starts row) (fourth found)))))))))))) ; copy start date
+
 
 
 (defparameter *copies*
@@ -881,7 +888,8 @@ A fentiek részei lehetnének egy keretmakrónak.
 
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ_.xlsx")
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Adatbázis táblázat.xlsx")
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.Adatbázis táblázat______.xlsx")
+;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.Adatbázis táblázat______.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.0_Adatbázis táblázat_kinev.mód-hoz.xlsx")
 
 (defun test ()
   (let ((sys:*line-arguments-list* (list nil *f*)))
