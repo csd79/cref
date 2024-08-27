@@ -735,13 +735,14 @@ A fentiek részei lehetnének egy keretmakrónak.
               )))))|#
 
 
-(defun flush-wip-sheet (workbook)
+#|(defun flush-wip-sheet (workbook)
   (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
-    (let* ((fee-elements  (extract-cols ws-help '("IeKód" "IeNév" "IeVége") 2))
+    (let* ((fee-elements  (extract-cols ws-help '("IeKód" "IeNév" "IeVége" "IeKezdete") 2))
            ;; Titles of all the columns we will fill in on the WIP sheet
            (column-titles (append (list "SZTSZ" "Jogszabályi hivatkozás")
                                   (mapcar #'second fee-elements)
                                   (mapcar #'third  fee-elements)
+                                  (mapcar #'fourth fee-elements)
                                   (mapcar #'second *copies*)))
            ;; Column numbers
            (columns       (mapcar #'(lambda (title)
@@ -749,6 +750,36 @@ A fentiek részei lehetnének egy keretmakrónak.
                                   column-titles))
            (last-row      (last-row ws-wip)))
       ;; Set column ranges to ""
+;      (print fee-elements)
+      (dolist (column columns)
+        (when column
+          (setf #p(value2 (range ws-wip column 2 column last-row)) ""))))))|#
+
+
+(defun transpose-tree (tree)
+  (loop for i from 0 below (length (first tree)) collecting
+        (mapcar #'(lambda (element)
+                    (nth i element))
+                tree)))
+
+
+(defun flush-wip-sheet (workbook)
+  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
+;    (let* ((fee-elements  (extract-cols ws-help '("IeKód" "IeNév" "IeVége" "IeKezdete") 2))
+    (let* ((fee-elements  (extract-cols ws-help '("IeNév" "IeVége" "IeKezdete") 2))
+           (fee-headers   (apply #'append (transpose-tree fee-elements)))
+           ;; Titles of all the columns we will fill in on the WIP sheet
+           (column-titles (append (list "SZTSZ" "Jogszabályi hivatkozás")
+                                  fee-headers
+                                  (mapcar #'second *copies*)))
+           ;; Column numbers
+           (columns       (mapcar #'(lambda (title)
+                                      (title-column ws-wip title))
+                                  (remove nil column-titles)))
+           (last-row      (last-row ws-wip)))
+      ;; Set column ranges to ""
+;      (print fee-headers)
+;      (print fee-elements)
       (dolist (column columns)
         (when column
           (setf #p(value2 (range ws-wip column 2 column last-row)) ""))))))
@@ -798,19 +829,29 @@ A fentiek részei lehetnének egy keretmakrónak.
                            (collect-fee-data ws-sap start end)
                            :key #'first :test #'equalp)))
                 ;; Iterate over all possible fee elements
+;                (format t "~a~%" fees)
                 (dolist (titles destinations)
                   (destructuring-bind (code name ends starts)
                       titles
                     ;; If element found on sheet 1:
                     (let ((found (find code fees :key #'first :test #'equalp)))
                       (when found
-                        (setf (xcell ws-wip name row) (second found))                ; copy sum
-                        (let ((ends-col   (and ends   (resolve-column-designator ends ws-wip)))
-                              (starts-col (and starts (resolve-column-designator starts ws-wip))))
-                          (when ends-col
-                            (xcell ws-wip ends-col row) (third found))               ; copy end date
-                          (when starts-col
-                            (xcell ws-wip starts-col row) (fourth found))))))))))))) ; copy start date
+                        (destructuring-bind (code-v sum-v ends-v starts-v)
+                            found
+#|                          (format t "code-v: ~a   sum-v: ~a   ends-v: ~a   starts-v: ~a~%" code-v sum-v ends-v starts-v)
+                          (format t "   ~a: ~a~%" name found)|#
+                          ;; Copy sum
+                          (setf (xcell ws-wip name row) sum-v)
+                          (let ((ends-col   (and ends   (resolve-column-designator ends ws-wip)))
+                                (starts-col (and starts (resolve-column-designator starts ws-wip))))
+                            ;; Copy end date
+                            (when (and ends-col ends-v)
+;                              (format t "      ends  ~a  ~a~%" ends-col ends-v)
+                              (setf (xcell ws-wip ends-col row) ends-v))
+                            ;; Copy start date
+                            (when (and starts-col starts-v)
+;                              (format t "      starts  ~a  ~a~%" starts-col starts-v)
+                              (setf (xcell ws-wip starts-col row) starts-v))))))))))))))
 
 
 (defparameter *copies*
@@ -884,7 +925,8 @@ A fentiek részei lehetnének egy keretmakrónak.
         (print "Jogszabályi hivatkozás")
         (construct-code-reference wbook))
       (format t "~%Fájl mentve: ~a~%KÉSZ~%" file)))
-  (read-line))
+;  (read-line))
+  )
 
 
 ;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\Pedagógus_1több_fõ.xlsx")
@@ -893,7 +935,7 @@ A fentiek részei lehetnének egy keretmakrónak.
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ_.xlsx")
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Adatbázis táblázat.xlsx")
 ;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.Adatbázis táblázat______.xlsx")
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.0_Adatbázis táblázat.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\2.0_Adatbázis táblázat_kinev.mód-hoz.xlsx")
 
 
 (defun test ()
