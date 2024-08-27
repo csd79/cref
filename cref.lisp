@@ -750,7 +750,8 @@ A fentiek részei lehetnének egy keretmakrónak.
            (last-row      (last-row ws-wip)))
       ;; Set column ranges to ""
       (dolist (column columns)
-        (setf #p(value2 (range ws-wip column 2 column last-row)) "")))))
+        (when column
+          (setf #p(value2 (range ws-wip column 2 column last-row)) ""))))))
 
 
 (defun copy-unique-bns (workbook)
@@ -803,10 +804,13 @@ A fentiek részei lehetnének egy keretmakrónak.
                     ;; If element found on sheet 1:
                     (let ((found (find code fees :key #'first :test #'equalp)))
                       (when found
-                        (setf (xcell ws-wip name   row) (second found) ; copy sum
-                              (xcell ws-wip ends   row) (third  found) ; copy end date
-                              (xcell ws-wip starts row) (fourth found)))))))))))) ; copy start date
-
+                        (setf (xcell ws-wip name row) (second found))                ; copy sum
+                        (let ((ends-col   (and ends   (resolve-column-designator ends ws-wip)))
+                              (starts-col (and starts (resolve-column-designator starts ws-wip))))
+                          (when ends-col
+                            (xcell ws-wip ends-col row) (third found))               ; copy end date
+                          (when starts-col
+                            (xcell ws-wip starts-col row) (fourth found))))))))))))) ; copy start date
 
 
 (defparameter *copies*
@@ -873,7 +877,7 @@ A fentiek részei lehetnének egy keretmakrónak.
         (flush-wip-sheet wbook)
         (print "SZTSZ-ek")
         (copy-unique-bns wbook)
-        (print "Bérelemek (összeg, érvényesség vége)")
+        (print "Bérelemek (összeg, érvényesség kezdete, vége)")
         (arrange-fees wbook)
         (print "Személyi kör, besorolás, esélyteremtési illetményrész jogalapja")
         (straight-copy-values wbook)
@@ -889,7 +893,8 @@ A fentiek részei lehetnének egy keretmakrónak.
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ_.xlsx")
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Adatbázis táblázat.xlsx")
 ;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.Adatbázis táblázat______.xlsx")
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.0_Adatbázis táblázat_kinev.mód-hoz.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.0_Adatbázis táblázat.xlsx")
+
 
 (defun test ()
   (let ((sys:*line-arguments-list* (list nil *f*)))
