@@ -8,8 +8,8 @@
 (asdf:load-system "cref")
 
 (lw:deliver 'cref:run
-    "c:\\Users\\cselovszkid\\common-lisp\\cref\\cref_v0.21b.exe"
-;    "c:\\Users\\csd79\\common-lisp\\cref\\cref_v0.21b.exe"
+    "c:\\Users\\cselovszkid\\common-lisp\\cref\\cref_v0.21c.exe"
+;    "c:\\Users\\csd79\\common-lisp\\cref\\cref_v0.21c.exe"
     5
 ;    :console :io
     :multiprocessing t

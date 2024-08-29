@@ -689,7 +689,8 @@ A fentiek részei lehetnének egy keretmakrónak.
    (find val list :key #'second :test #'string-equal)))
 
 
-(defun value-rows (worksheet title value)
+#|(defun value-rows (worksheet title value)
+  (format t "   value-rows~%")
   (let ((column (title-column worksheet title))
         (start  nil)
         (end    nil))
@@ -697,6 +698,7 @@ A fentiek részei lehetnének egy keretmakrónak.
           for val = #p(value2 (range worksheet column row))
           until end doing
           (progn
+            (format t "         ~a~%" row)
             (and (equalp val value)
                  (not start)
                  (setf start row))
@@ -704,7 +706,18 @@ A fentiek részei lehetnének egy keretmakrónak.
                  start
                  (not end)
                  (setf end row))))
-    (values start (1- end))))
+    (values start (1- end))))|#
+
+
+(defun value-rows (worksheet title value)
+  (let ((column (xrange worksheet title 2 title (last-row worksheet))))
+    (if (typep column 'array)
+      (let* ((list   (loop for e across (column->row column) collecting
+                           (excel-value-as-number e)))
+             (first  (+ 2 (position value list :test #'equalp)))
+             (last   (+ 2 (position value list :test #'equalp :from-end t))))
+        (values first last))
+      (values 2 2))))
 
 
 (defun extract-cols (worksheet titles row-start &optional (row-end nil))
@@ -805,6 +818,7 @@ A fentiek részei lehetnének egy keretmakrónak.
 (defparameter *sap-it14* '(20 22 31 35))
 
 (defun collect-fee-data (worksheet row-start row-end)
+;  (format t "      collect-fee-data starting~%")
   (flet ((collect (list row)
            (mapcar #'(lambda (col)
                        (xcell worksheet col row))
@@ -829,7 +843,6 @@ A fentiek részei lehetnének egy keretmakrónak.
                            (collect-fee-data ws-sap start end)
                            :key #'first :test #'equalp)))
                 ;; Iterate over all possible fee elements
-;                (format t "~a~%" fees)
                 (dolist (titles destinations)
                   (destructuring-bind (code name ends starts)
                       titles
@@ -935,7 +948,8 @@ A fentiek részei lehetnének egy keretmakrónak.
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Pedagógus_PedNOKS_1több_fõ_.xlsx")
 ;(defparameter *f* "c:\\Users\\csd79\\common-lisp\\cref\\Adatbázis táblázat.xlsx")
 ;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.Adatbázis táblázat______.xlsx")
-(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\2.0_Adatbázis táblázat_kinev.mód-hoz.xlsx")
+;(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\2.0_Adatbázis táblázat_kinev.mód-hoz.xlsx")
+(defparameter *f* "c:\\Users\\cselovszkid\\common-lisp\\cref\\1.0_Adatbázis táblázat.xlsx")
 
 
 (defun test ()
@@ -966,3 +980,11 @@ A fentiek részei lehetnének egy keretmakrónak.
                    (numberp (read-from-string value))))
       (value)
     "Value ~a is not readable as number." value))
+
+
+
+
+(defun testa ()
+  (with-workbook (wbook :open-file *ff* :wsvars (ws-sap) :close t)
+    (column->row
+     (xrange ws-sap "SZTSZ" 2 "SZTSZ" (last-row ws-sap)))))
