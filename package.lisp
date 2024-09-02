@@ -6,4 +6,11 @@
 
 (defpackage #:cref
   (:use #:cl #:ccom)
-  (:export #:run))
+  (:export #:*puetv-b1b2b8b9-illetmenyelemek-2024*
+           #:*puetv-megnevezes-2024*
+           #:*puetv-b1b2b8b9-illetmenyelemek-2024-sorrend*
+           #:*coderefs*
+           #:*codenames*
+           #:fees
+           #:convert
+           #:run))
