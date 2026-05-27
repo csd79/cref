@@ -3,11 +3,15 @@
 (defsystem "cref"
   :description "Code ref generator"
   :author      "Denes Cselovszki <denes.cselovszki@gmail.com>"
-  :version     "0.22"
-  :depends-on  ("ccom" "cl-ppcre")
+  :version     "0.23"
+  :depends-on  ("ccom4" "cl-ppcre")
  :serial      t
   :components  ((:file "package")
                 (:file "fli-templates")
-                (:file "puetv-2024")
+;                (:file "puetv-2024")
+;                (:file "puetv-2025jan")
+;                (:file "puetv-2025sep")
+                (:file "puetv-2026jan")
                 (:file "cref-logic")
-                (:file "script")))
+;                (:file "script")
+                ))

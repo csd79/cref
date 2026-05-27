@@ -5,10 +5,11 @@
 
 
 (defpackage #:cref
-  (:use #:cl #:ccom)
-  (:export #:*puetv-b1b2b8b9-illetmenyelemek-2024*
-           #:*puetv-megnevezes-2024*
-           #:*puetv-b1b2b8b9-illetmenyelemek-2024-sorrend*
+  (:use #:cl #:ccom4)
+  (:export 
+           #:*puetv-b1b2b8b9-illetmenyelemek-current*
+           #:*puetv-megnevezes-current*
+           #:*puetv-b1b2b8b9-illetmenyelemek-current-sorrend*
            #:*coderefs*
            #:*codenames*
            #:fees

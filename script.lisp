@@ -1,11 +1,11 @@
-(in-package :cref)
+#|(in-package :cref)
 
 
 ;;; ---------------------------------------------------------------
 
 
-;; Visszaadja az elsõ és utolsó sort, amelyben VALUE érték található a
-;; WORKSHEET lap TITLE fejlécû oszlopában.
+;;; Visszaadja az elsõ és utolsó sort, amelyben VALUE érték található a
+;;; WORKSHEET lap TITLE fejlécû oszlopában.
 (defun value-rows (worksheet title value)
   (let ((column (xrange worksheet title 2 title (last-row worksheet))))
     (if (typep column 'array)
@@ -17,11 +17,11 @@
       (values 2 2))))
 
 
-;; Munkalap egy területének kimásolása listák listájaként.
+;;; Munkalap egy területének kimásolása listák listájaként.
 (defun extract-cols (worksheet titles row-start &optional (row-end nil))
   (loop for row from row-start
         for list = (mapcar #'(lambda (title)
-                               #p(value2 (range worksheet (title-column worksheet title) row))) ; XRANGE !
+                               (?value2 (range worksheet (title-column worksheet title) row))) ; XRANGE !
                            titles)
         until (if row-end
                 (> row row-end)
@@ -29,7 +29,7 @@
         collect list))
 
 
-;; Listák listájának transzponálása.
+;;; Listák listájának transzponálása.
 (defun transpose-tree (tree)
   (loop for i from 0 below (length (first tree)) collecting
         (mapcar #'(lambda (element)
@@ -37,17 +37,17 @@
                 tree)))
 
 
-;; Ürítendõ és magában másolandó adatok.
+;;; Ürítendõ és magában másolandó adatok.
 (defparameter *copies*
   '(("SZK" "SZK")
     ("Bérrendsz. csop név" "Besorolás")
     ("Esélyteremtési illetményrészre" "Esély_jogsz_alap")))
 
 
-;; MUNKA lap ürítése.
+;;; MUNKA lap ürítése.
 (defun flush-wip-sheet (workbook)
-  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
-;  (with-workbook (workbook :wsvars (nil ws-wip ws-help))  ; <-- nil: do not bound this sheet
+;  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
+  (with-workbook (:use workbook :wsvars (ws-sap ws-wip ws-help))
     (let* ((fee-elements  (extract-cols ws-help '("IeNév" "IeVége" "IeKezdete") 2))
            (fee-headers   (apply #'append (transpose-tree fee-elements)))
            ;; Titles of all the columns we will fill in on the WIP sheet
@@ -62,12 +62,13 @@
       ;; Set column ranges to ""
       (dolist (column columns)
         (when column
-          (setf #p(value2 (range ws-wip column 2 column last-row)) ""))))))
+          (setf (?value2 (range ws-wip column 2 column last-row)) ""))))))
 
 
-;; Egyedi SZTSZ-ek másolása a MUNKA lapra.
+;;; Egyedi SZTSZ-ek másolása a MUNKA lapra.
 (defun copy-unique-bns (workbook)
-  (with-workbook (workbook :wsvars (ws-sap ws-wip))
+;  (with-workbook (workbook :wsvars (ws-sap ws-wip))
+  (with-workbook (:use workbook :wsvars (ws-sap ws-wip))
     ;; Collect BNs from the SAP sheet
     (let* ((query-bns (loop for row from 2 upto (last-row ws-sap)
                             for value = (xcell ws-sap "SZTSZ" row)
@@ -82,11 +83,13 @@
                   (format nil "~d" (round (excel-value-as-number bn))))))))
 
 
-(defparameter *sap-it08* '(16 18 30 36))
-(defparameter *sap-it14* '(20 22 31 35))
+#|(defparameter *sap-it08* '(16 18 30 36))
+(defparameter *sap-it14* '(20 22 31 35))|#
+(defparameter *sap-it08* '(16 18 31 37 40))  ;   kód   összeg   vége   kezdete   címzetes
+(defparameter *sap-it14* '(20 22 32 36 40))  ;   kód   összeg   vége   kezdete   címzetes
 
 
-;; Bérelem adatok összegyûjtése az elsõ és utolsó sor között.
+;;; Bérelem adatok összegyûjtése az elsõ és utolsó sor között.
 (defun collect-fee-data (worksheet row-start row-end)
   (flet ((collect (list row)
            (mapcar #'(lambda (col)
@@ -97,9 +100,10 @@
           collecting (collect *sap-it14* row))))
 
 
-;; Bérelem adatok (összeg, kezdete-vége dátumok) másolása MUNKA lapra.
+;;; Bérelem adatok (összeg, kezdete-vége dátumok) másolása MUNKA lapra.
 (defun arrange-fees (workbook)
-  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
+;  (with-workbook (workbook :wsvars (ws-sap ws-wip ws-help))
+  (with-workbook (:use workbook :wsvars (ws-sap ws-wip ws-help))
     (let ((destinations (extract-cols ws-help '("IeKód" "IeNév" "IeVége" "IeKezdete") 2)))
       ;; Iterate over BNs on sheet 2
       (loop for row from 2
@@ -120,8 +124,8 @@
                     (let ((found (find code fees :key #'first :test #'equalp)))
                       (when found
                         (destructuring-bind (code-v sum-v ends-v starts-v)
-;                        (destructuring-bind (nil sum-v ends-v starts-v)
                             found
+                          (declare (ignore code-v))
                           ;; Copy sum
                           (setf (xcell ws-wip name row) sum-v)
                           (let ((ends-col   (and ends   (resolve-column-designator ends ws-wip)))
@@ -134,9 +138,10 @@
                               (setf (xcell ws-wip starts-col row) starts-v))))))))))))))
 
 
-;; Egyéb megadott adatok másolása a MUNKA lapra (ld. *COPIES* lista.
+;;; Egyéb megadott adatok másolása a MUNKA lapra (ld. *COPIES* lista.
 (defun straight-copy-values (workbook)
-  (with-workbook (workbook :wsvars (ws-sap ws-wip))
+;  (with-workbook (workbook :wsvars (ws-sap ws-wip))
+  (with-workbook (:use workbook :wsvars (ws-sap ws-wip))
     ;; Iterate on BNs on the WIP sheet
     (loop for row-wip from 2
           for bn = (xcell ws-wip "SZTSZ" row-wip)
@@ -157,9 +162,10 @@
 |#
 
 
-;; 
+;;; Jogszabályi hivatkozás szövegének generálása.
 (defun construct-code-reference (workbook)
-  (with-workbook (workbook :wsvars (ws-sap ws-wip))
+;  (with-workbook (workbook :wsvars (ws-sap ws-wip))
+  (with-workbook (:use workbook :wsvars (ws-sap ws-wip))
     ;; Iterate on BNs from the WIP sheet
     (loop for row from 2
           for bn = (xcell ws-wip "SZTSZ" row)
@@ -169,8 +175,8 @@
           (multiple-value-bind (start stop)
               (value-rows ws-sap "SZTSZ" bn)
             ;; Collect fee element codes
-            (let* ((*coderefs*    *puetv-b1b2b8b9-illetmenyelemek-2024*)
-                   (*codenames*   *puetv-megnevezes-2024*)
+            (let* ((*coderefs*    *puetv-b1b2b8b9-illetmenyelemek-2025sep*)
+                   (*codenames*   *puetv-megnevezes-2025sep*)
                    (*defined-tvs* (if (string= (xcell ws-wip "Besorolás" row) "Gyakornok")
                                     '("1puetv" "2puetv-vhr")
                                     '("1puetv")))
@@ -192,11 +198,11 @@
 ;;; ---------------------------------------------------------------
 
 
-;; 
+;;; main();
 (defun run ()
   (let ((file (second sys:*line-arguments-list*)))
     (when file
-      (with-workbook (wbook :open-file file :save t :close t)
+      (with-workbook (:wbook wbook :open file :save t :close t)
         (print "Korábbi adatok törlése")
         (flush-wip-sheet wbook)
         (print "SZTSZ-ek")
@@ -218,3 +224,4 @@
 (defun test ()
   (let ((sys:*line-arguments-list* (list nil *f*)))
     (run)))
+|#

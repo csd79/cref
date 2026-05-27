@@ -5,10 +5,50 @@
 ;;; Globális változók
 
 
+(defparameter *puetv-b1b2b8b9-illetmenyelemek-current*
+  *puetv-b1b2b8b9-illetmenyelemek-2026jan*)
+
+(defparameter *puetv-megnevezes-current*
+  *puetv-megnevezes-2026jan*)
+
+(defparameter *puetv-b1b2b8b9-illetmenyelemek-current-sorrend*
+  *puetv-b1b2b8b9-illetmenyelemek-2026jan-sorrend*)
+
+
 (defparameter *coderefs*    '())
 (defparameter *codenames*   '())
 (defparameter *defined-tvs* '())
 (defparameter *output*      nil)
+
+
+;;; ---------------------------------------------------------------
+;;; DEPRECATED
+
+
+;; LIST bérelemek szûrése kód, személyi kör (ps), besorolás (lab) és esélyt.ill.alap (eila) szerint.
+(defun filter-fees% (list &key (code nil) (ps nil) (lab nil) (eila nil) (titl nil)); (pvs nil))
+  (let ((results '())
+        (codev code) (psv ps) (labv lab) (eilav eila) (titlv titl)); (pvsv pvs))
+    (dolist (record list)
+      (destructuring-bind (&key code ps lab eila titl); pvs)
+          (getf record :meta)
+        (when (and (or (null code) (member codev code :test #'string=))
+                   (or (null ps)   (member psv   ps   :test #'string=))
+                   (or (null lab)  (member labv  lab  :test #'string=))
+                   (or (null eila) (member eilav eila :test #'string=))
+                   (or (null titl) (member titlv titl :test #'string=))
+;                   (or (null pvs)  (member pvsv  pvs  :test #'string=))
+                   )
+          (push (getf record :id) results))))
+    (nreverse results)))
+
+;; Egy adott személyi kör/beosztás/esélyt.ill.alapra érvényes,
+;; a CODES által azonosított bérelemek összegyûjtése.
+(defun fees% (&key (codes '()) (ps nil) (lab nil) (eila nil) (titl nil)); (pvs nil))
+  (apply #'append
+         (mapcar #'(lambda (code)
+                     (filter-fees% *coderefs* :code code :ps ps :lab lab :eila eila :titl titl)); :pvs pvs))
+                 codes)))
 
 
 ;;; ---------------------------------------------------------------
@@ -39,28 +79,40 @@
             (remove nil result)))))
 
 
-;; LIST bérelemek szûrése kód, személyi kör (ps), besorolás (lab) és esélyt.ill.alap (eila) szerint.
-(defun filter-fees (list &key (code nil) (ps nil) (lab nil) (eila nil))
+(defun plist-keys (plist)
+  (loop for key in plist by #'cddr collecting key))
+
+
+(defun filter-fees (coderefs &rest selectors)
+  "Collect :IDs of every row whose :META either contains exact value for a certain key or none at all."
   (let ((results '())
-        (codev code) (psv ps) (labv lab) (eilav eila))
-    (dolist (record list)
-      (destructuring-bind (&key code ps lab eila)
-          (getf record :meta)
-        (when (and (or (null code) (member codev code :test #'string=))
-                   (or (null ps)   (member psv   ps   :test #'string=))
-                   (or (null lab)  (member labv  lab  :test #'string=))
-                   (or (null eila) (member eilav eila :test #'string=)))
+        (skeys   (plist-keys selectors)))
+    (dolist (record coderefs)
+      (let* ((meta      (getf record :meta))
+             (mkeys     (plist-keys meta))
+             (all-keys  (remove-duplicates (append skeys mkeys)))
+             (selection (loop for key in all-keys
+                              for valset = (getf meta key)
+                              for sval   = (getf selectors key)
+                              collecting
+                              (or (null valset)
+                                  (member sval valset :test #'string=)))))
+        (when (every #'identity selection)
           (push (getf record :id) results))))
     (nreverse results)))
 
 
-;; Egy adott személyi kör/beosztás/esélyt.ill.alapra érvényes,
-;; a CODES által azonosított bérelemek összegyûjtése.
-(defun fees (&key (codes '()) (ps nil) (lab nil) (eila nil))
-  (apply #'append
-         (mapcar #'(lambda (code)
-                     (filter-fees *coderefs* :code code :ps ps :lab lab :eila eila))
-                 codes)))
+(defun fees (&rest selectors)
+  "Generate a list of :IDs based on a :CODES list (a :CODE is a more general form of an :ID) and additional selectors."
+  (let ((codes (getf selectors :codes))
+        (selectors% (loop for (key val) on selectors by #'cddr
+                          unless (eq key :codes)
+                          collect (list key val) into results
+                          finally (return (apply #'nconc results)))))
+    (apply #'append
+           (mapcar #'(lambda (code)
+                       (apply #'filter-fees *coderefs* :code code selectors%))
+                   codes))))
 
 
 ;;; ---------------------------------------------------------------
@@ -219,6 +271,7 @@
                              (let ((id (getf code :tv)))
                                (and id (string= id tv))))
                          *codenames*)))
+;    (push *codenames* wax::g)
     (when found
       (if (position tv *defined-tvs* :test #'string=)
         (getf found :short)
@@ -372,22 +425,27 @@
 ;;; Spot korrekciók elvégzése a nyomtatott hivatkozási elemeken.
 
 
-;; Van a LIST-nek olyan beágyazott listája, ami tartalmazza a STRING-et?
-(defun contains-p (string list)
+;;;;;;;;;;;;;;; Van a LIST-nek olyan beágyazott listája, ami tartalmazza a STRING-et?
+;; Van a LIST-ben olyan sztring, ami része a STRING-nek?
+(defun contains-p% (string list)
   (let ((results '()))
     (loop for sub in list doing
           (push (search sub string :test #'string-equal) results))
     (position-if-not #'null (nreverse results))))
+(defun contains-p (string list)
+  (loop for emb in list
+        collecting (search emb string :test #'string-equal) into results
+        finally return (some #'identity results)))
 
 
-;; A LIST hány POS utáni eleme található meg a SUBS allistáiban?
+;; A LIST hány POS utáni sztringjében található meg a SUBS valamelyik eleme?
 (defun count-rest (list pos subs)
   (loop for elem in (subseq list pos)
         counting (contains-p elem subs)))
 
 
-;; Ua. mint COUNT?!
-(defun count-conseq (list pos sub)
+;; A LIST hány POS utáni sztringjében található meg a SUB?
+(defun count-conseq% (list pos sub)
   (let ((count 0))
     (loop for i from pos below (length list) doing
           (let ((current (nth i list)))
@@ -395,6 +453,9 @@
               (incf count)
               (loop-finish))))
     count))
+(defun count-conseq (list pos sub)
+  (loop for elem in (subseq list pos)
+        counting (search sub elem :test #'string-equal)))
 
 
 ;; Az OLD összes elõfordulását NEW-ra cserélni a STRING-ben.
@@ -413,6 +474,7 @@
 ;; Spot healing függvények.
 (defparameter *rewrites*
   (list
+
    ;; Törvények, rendeletek neve elõtt elválasztó és névelõ
    #'(lambda (list)
        (let* ((subs   '("tv." "törvény" "rendelet"))
@@ -433,6 +495,7 @@
                      (setf (nth i copy) full))
                    (decf count))))
          copy))
+
    ;; Bekezdések, pontok összevonása
    #'(lambda (list)
        (let ((subs '("bekezdése" "pontja"))
@@ -451,6 +514,33 @@
                                         (t string))))
                      (setf (nth i copy) new)))))
          copy))
+
+   ;; Két egymás utáni § esetén az elsõ után legyen "-a, "
+   #'(lambda (list)
+       (let ((copy (copy-list list)))
+         (loop for i from 0 below (length list) doing
+               (let ((current (nth i list))
+                     (next    (offset list (1+ i))))
+                 (when (and (find #\§ current)
+                            (find #\§ next))
+                   (setf (nth i copy)
+                         (replace-substring current "§ " "§-a, ")))))
+         copy))
+
+   ;; Záró § esetén §-a, és megelõzõ vesszõ cseréje és-re
+   #'(lambda (list)
+       (let ((copy (copy-list list))
+             (len  (length list)))
+         (when (find #\§ (nth (1- len) list))
+           (setf (nth (1- len) copy)
+                 (replace-substring (nth (1- len) copy)
+                                    "§ " "§-a, "))
+           (when (find #\, (nth (- len 2) list))
+             (setf (nth (- len 2) copy)
+                   (replace-substring (nth (- len 2) copy)
+                                      "," " és"))))
+         copy))
+
    ;; Záró vesszõ törlése
    #'(lambda (list)
        (let* ((copy (copy-list list))
@@ -461,17 +551,7 @@
                                      last :from-end t)))
          (append (butlast copy)
                  (list (subseq last 0 (1- end))))))
-   ;; Két egymás utáni § esetén az elsõ után legyen ","
-   #'(lambda (list)
-       (let ((copy (copy-list list)))
-         (loop for i from 0 below (length list) doing
-               (let ((current (nth i list))
-                     (next    (offset list (1+ i))))
-                 (when (and (find #\§ current)
-                            (find #\§ next))
-                   (setf (nth i copy)
-                         (replace-substring current "§ " "§, ")))))
-         copy))
+
    ;; Dupla szóközök cseréje szimpla szóközre.
    #'(lambda (list)
        (let ((copy (copy-list list)))
@@ -481,6 +561,7 @@
                    (setf (nth i copy)
                          (replace-substring current "  " " ")))))
          copy))
+
    ;; " , " cseréje ", "-re
    #'(lambda (list)
        (let ((copy (copy-list list)))
@@ -521,3 +602,26 @@
   (rewrite
    (traverse
     (generate-refs keys))))
+
+
+
+
+
+
+
+
+
+
+
+
+#|(defun tg ()
+  (let ((cref::*coderefs*  cref::*puetv-b1b2b8b9-illetmenyelemek-2025sep*)
+        (cref::*codenames* cref::*puetv-megnevezes-2025sep*)
+        (cref::*defined-tvs* '("1puetv")))
+    (let ((g '(:TER-ILLEMELES-PED :MESTERFOK-ILLNOV :ESELYTEREMT-ILLR-FELADAT :EGYES-TANTRGY-ILLNOV :IG-H :HAVI-ILL-PED1-KUTATO)))
+      (format t "~a~%~%" (generate-refs g))
+;      (traverse (generate-refs g))
+;      (format t "~a~%~%" (traverse (generate-refs g)))
+      (format t "~a~%~%" (rewrite (traverse (generate-refs g))))
+      
+      )))|#

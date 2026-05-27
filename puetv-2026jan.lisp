@@ -5,7 +5,7 @@
 ;;; PÚÉTV illetményelemek
 
 
-(defparameter *puetv-b1b2b8b9-illetmenyelemek-2024*
+(defparameter *puetv-b1b2b8b9-illetmenyelemek-2026jan*
   '(
     (:id   :havi-ill-gyakornok
      :name "Havi illetmény"
@@ -39,9 +39,17 @@
      :refs ((:tv "2puetv-vhr" :par "95/A" :bek "2")
             (:tv "2puetv-vhr" :par "95/A" :bek "4")))
 
+
+    (:id   :palyakezdes-illnov
+     :name "Pályakezdés után járó illetménynövekedés"
+     :meta (:code ("1113")
+            :ps   ("B2")
+            :lab  ("Gyakornok"))
+     :refs ((:tv "2puetv-vhr" :par "95/A" :bek "6")))
+
     
     (:id   :eselyteremt-illr-terulet
-     :name "Területi alapon járó esélyteremtési illetményrész"
+     :name "Esélyteremtési illetményrész"
      :meta (:code ("1115")
             :ps   ("B2")
             :eila ("Kedvezményezett vagy felzárkózó településen történõ feladatellátás"))
@@ -52,7 +60,7 @@
 
 
     (:id   :eselyteremt-illr-feladat
-     :name "Feladatalapon járó esélyteremtési illetményrész"
+     :name "Esélyteremtési illetményrész"
      :meta (:code ("1115")
             :ps   ("B2")
             :eila ("IPR-program keretébe tartozó feladatellátás"))
@@ -61,6 +69,30 @@
             (:tv "2puetv-vhr" :par "88" :bek "5")
             (:tv "2puetv-vhr" :par "88" :bek "6")))
 
+
+    (:id   :ter-illemeles-ped
+     :name "Teljesítményértékelés alapján megállapított illetményemelés"
+     :meta (:code ("1125")
+            :ps   ("B2")
+            :lab  ("Pedagógus I." "Pedagógus II." "Mesterpedagógus" "Kutatótanár"))
+     :refs ((:tv "1puetv" :par "98" :bek "3")
+            (:tv "5terill-182-2025-kr" :par "2" :bek "1")
+            (:tv "5terill-182-2025-kr" :par "2" :bek "2")
+;            (:tv "5terill-182-2025-kr" :par "3")
+           ))
+
+
+    (:id   :ter-illemeles-pednoks
+     :name "Teljesítményértékelés alapján megállapított illetményemelés"
+     :meta (:code ("1125")
+            :ps   ("B8")
+            :lab  ("Pedagógus I." "Pedagógus II."))
+     :refs ((:tv "1puetv" :par "98" :bek "3")
+            (:tv "5terill-182-2025-kr" :par "2" :bek "1")
+            (:tv "5terill-182-2025-kr" :par "2" :bek "2")
+;            (:tv "5terill-182-2025-kr" :par "3")
+           ))
+    
     
     (:id   :gyogyped-potl
      :name "Gyógypedagógiai pótlék"
@@ -141,10 +173,27 @@
             (:tv "2puetv-vhr" :par "90" :bek "6a")))
 
     
+    (:id   :cig
+     :name "Címzetes igazgatói megbízási díj"
+     :meta (:code ("2028")
+            :ps   ("B2")
+            :titl ("07"))
+     :refs ((:tv "1puetv" :par "73" :bek "12")))
+
+    
+    (:id   :cfoig
+     :name "Címzetes fõigazgatói megbízási díj"
+     :meta (:code ("2026")
+            :ps   ("B2")
+            :titl ("08"))
+     :refs ((:tv "1puetv" :par "73" :bek "12")))
+
+
     (:id   :ig
      :name "Igazgatói megbízási díj"
      :meta (:code ("2028")
-            :ps   ("B2"))
+            :ps   ("B2")
+            :titl (""))
      :refs ((:tv "1puetv" :par "102" :bek "1")
             (:tv "1puetv" :par "102" :bek "2")))
 
@@ -152,7 +201,8 @@
     (:id   :foig
      :name "Fõigazgatói megbízási díj"
      :meta (:code ("2026")
-            :ps   ("B2"))
+            :ps   ("B2")
+            :titl (""))
      :refs ((:tv "1puetv" :par "102" :bek "1")
             (:tv "1puetv" :par "102" :bek "2")))
 
@@ -170,7 +220,7 @@
      :meta (:code ("2027")
             :ps   ("B2"))
      :refs ((:tv "1puetv" :par "102" :bek "1")
-            (:tv "1puetv" :par "102" :bek "2" :pont "a")))
+            (:tv "1puetv" :par "102" :bek "3" :pont "a")))
 
     
     (:id   :tagint-ig
@@ -261,11 +311,10 @@
      :name "Munkabér"
      :meta (:code ("1100")
             :ps   ("B1"))
-     :refs ())
-    ))
+     :refs ())))
 
 
-(defparameter *puetv-megnevezes-2024*
+(defparameter *puetv-megnevezes-2026jan*
   '((:tv    "1puetv"
      :short "Púétv."
      :full  "pedagógusok új életpályájáról szóló 2023. évi LII. törvény (a továbbiakban: Púétv.)")
@@ -280,9 +329,13 @@
     
     (:tv    "4emmi-20-2012-viii31"
      :short "???"
-     :full  "nevelési-oktatási intézmények mûködésérõl és a köznevelési intézmények névhasználatáról szóló 20/2012. (VIII. 31.) EMMI rendelet"
-     )))
+     :full  "nevelési-oktatási intézmények mûködésérõl és a köznevelési intézmények névhasználatáról szóló 20/2012. (VIII. 31.) EMMI rendelet")
+
+    (:tv    "5terill-182-2025-kr"
+     :short "???"
+     :full  "2024/2025. tanévi teljesítményértékelés alapján történõ illetmény kifizetésérõl és egyes köznevelési tárgyú kormányrendeletek módosításáról szóló 182/2025. (VI. 30.) Korm. rendelet")
+    ))
 
 
-(defparameter *puetv-b1b2b8b9-illetmenyelemek-2024-sorrend*
-  '("1P00" "1116" "1114" "1115" "2026" "2027" "2028" "2029" "2030" "2031" "2032" "2033" "2034" "2035" "2036" "2037" "2587" "2598" "2800" "2586" "1100"))
+(defparameter *puetv-b1b2b8b9-illetmenyelemek-2026jan-sorrend*
+  '("1P00" "1116" "1114" "1113" "1115" "1125" "2587" "2598" "2800" "2586" "2034" "2035" "2036" "2037" "2028" "2026" "2029" "2027" "2030" "2031" "2032" "2033" "1100"))

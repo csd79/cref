@@ -5,7 +5,7 @@
 ;;; PÚÉTV illetményelemek
 
 
-(defparameter *puetv-b1b2b8b9-illetmenyelemek-2024*
+(defparameter *puetv-b1b2b8b9-illetmenyelemek-2025jan*
   '(
     (:id   :havi-ill-gyakornok
      :name "Havi illetmény"
@@ -39,9 +39,18 @@
      :refs ((:tv "2puetv-vhr" :par "95/A" :bek "2")
             (:tv "2puetv-vhr" :par "95/A" :bek "4")))
 
+
+    (:id   :palyakezdes-illnov
+     :name "Pályakezdés után járó illetménynövekedés"
+     :meta (:code ("1113")
+            :ps   ("B2")
+            :lab  ("Gyakornok"))
+     :refs ((:tv "2puetv-vhr" :par "95/A" :bek "6")))
+
     
     (:id   :eselyteremt-illr-terulet
-     :name "Területi alapon járó esélyteremtési illetményrész"
+;     :name "Területi alapon járó esélyteremtési illetményrész"
+     :name "Esélyteremtési illetményrész"
      :meta (:code ("1115")
             :ps   ("B2")
             :eila ("Kedvezményezett vagy felzárkózó településen történõ feladatellátás"))
@@ -52,7 +61,8 @@
 
 
     (:id   :eselyteremt-illr-feladat
-     :name "Feladatalapon járó esélyteremtési illetményrész"
+;     :name "Feladatalapon járó esélyteremtési illetményrész"
+     :name "Esélyteremtési illetményrész"
      :meta (:code ("1115")
             :ps   ("B2")
             :eila ("IPR-program keretébe tartozó feladatellátás"))
@@ -141,10 +151,27 @@
             (:tv "2puetv-vhr" :par "90" :bek "6a")))
 
     
+    (:id   :cig
+     :name "Címzetes igazgatói megbízási díj"
+     :meta (:code ("2028")
+            :ps   ("B2")
+            :titl ("07"))
+     :refs ((:tv "1puetv" :par "73" :bek "12")))
+
+    
+    (:id   :cfoig
+     :name "Címzetes fõigazgatói megbízási díj"
+     :meta (:code ("2026")
+            :ps   ("B2")
+            :titl ("08"))
+     :refs ((:tv "1puetv" :par "73" :bek "12")))
+
+
     (:id   :ig
      :name "Igazgatói megbízási díj"
      :meta (:code ("2028")
-            :ps   ("B2"))
+            :ps   ("B2")
+            :titl (""))
      :refs ((:tv "1puetv" :par "102" :bek "1")
             (:tv "1puetv" :par "102" :bek "2")))
 
@@ -152,7 +179,8 @@
     (:id   :foig
      :name "Fõigazgatói megbízási díj"
      :meta (:code ("2026")
-            :ps   ("B2"))
+            :ps   ("B2")
+            :titl (""))
      :refs ((:tv "1puetv" :par "102" :bek "1")
             (:tv "1puetv" :par "102" :bek "2")))
 
@@ -265,7 +293,7 @@
     ))
 
 
-(defparameter *puetv-megnevezes-2024*
+(defparameter *puetv-megnevezes-2025jan*
   '((:tv    "1puetv"
      :short "Púétv."
      :full  "pedagógusok új életpályájáról szóló 2023. évi LII. törvény (a továbbiakban: Púétv.)")
@@ -284,5 +312,6 @@
      )))
 
 
-(defparameter *puetv-b1b2b8b9-illetmenyelemek-2024-sorrend*
-  '("1P00" "1116" "1114" "1115" "2026" "2027" "2028" "2029" "2030" "2031" "2032" "2033" "2034" "2035" "2036" "2037" "2587" "2598" "2800" "2586" "1100"))
+(defparameter *puetv-b1b2b8b9-illetmenyelemek-2025jan-sorrend*
+;  '("1P00" "1116" "1114" "1115" "2026" "2027" "2028" "2029" "2030" "2031" "2032" "2033" "2034" "2035" "2036" "2037" "2587" "2598" "2800" "2586" "1100"))
+  '("1P00" "1116" "1114" "1113" "1115" "2587" "2598" "2800" "2586" "2034" "2035" "2036" "2037" "2028" "2026" "2029" "2027" "2030" "2031" "2032" "2033" "1100"))
