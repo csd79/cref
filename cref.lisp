@@ -5,17 +5,17 @@
 ;;; Globális változók
 
 
-(defparameter *puetv-b1b2b8b9-illetmenyelemek-current*
+#|(defparameter *puetv-b1b2b8b9-illetmenyelemek-current*
   *puetv-b1b2b8b9-illetmenyelemek-2026jan*)
 
 (defparameter *puetv-megnevezes-current*
   *puetv-megnevezes-2026jan*)
 
 (defparameter *puetv-b1b2b8b9-illetmenyelemek-current-sorrend*
-  *puetv-b1b2b8b9-illetmenyelemek-2026jan-sorrend*)
+  *puetv-b1b2b8b9-illetmenyelemek-2026jan-sorrend*)|#
 
 
-(defparameter *coderefs*    '())
+;(defparameter *coderefs*    '())
 (defparameter *codenames*   '())
 (defparameter *defined-tvs* '())
 (defparameter *output*      nil)
@@ -102,7 +102,7 @@
     (nreverse results)))
 
 
-(defun fees (&rest selectors)
+(defun fees (coderefs &rest selectors)
   "Generate a list of :IDs based on a :CODES list (a :CODE is a more general form of an :ID) and additional selectors."
   (let ((codes (getf selectors :codes))
         (selectors% (loop for (key val) on selectors by #'cddr
@@ -111,7 +111,7 @@
                           finally (return (apply #'nconc results)))))
     (apply #'append
            (mapcar #'(lambda (code)
-                       (apply #'filter-fees *coderefs* :code code selectors%))
+                       (apply #'filter-fees coderefs :code code selectors%))
                    codes))))
 
 
@@ -248,11 +248,11 @@
 ;;    (:TV "2puetv-vhr" :PAR "88" :BEK "6")
 ;;    (:TV "2puetv-vhr" :PAR "95/A" :BEK "2")
 ;;    (:TV "2puetv-vhr" :PAR "95/A" :BEK "4"))
-(defun generate-refs (keys)
+(defun generate-refs (keys coderefs)
   (sort
    (remove-covered-subs 
     (remove-duplicates 
-     (collect-fees keys *coderefs*)
+     (collect-fees keys coderefs)
      :test #'plist-equalp)
     '(:pont))
    #'<-records))
@@ -598,10 +598,12 @@
 ;;   (:egyes-tantrgy-illnov :eselyteremt-illr-feladat)
 ;; ->
 ;;   "a pedagógusok új életpályájáról szóló 2023. évi LII. törvény (a továbbiakban: Púétv.) 98. § (5) bekezdésének b) pontja, valamint a pedagógusok új életpályájáról szóló 2023. évi LII. törvény végrehajtásáról szóló 401/2023. (VIII. 30.) Korm. rendelet (a továbbiakban: Púétv. vhr.) 88. § (4), (5) és (6) bekezdése, 95/A. § (2) és (4) bekezdése"
-(defun convert (keys)
-  (rewrite
-   (traverse
-    (generate-refs keys))))
+(defun convert (keys coderefs codenames defined-tvs)
+  (let ((*codenames* codenames)
+        (*defined-tvs* defined-tvs))
+    (rewrite
+     (traverse
+      (generate-refs keys coderefs)))))
 
 
 
